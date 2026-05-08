@@ -1,15 +1,16 @@
 {
-	"name": "vite-react-template",
-	"description": "A template for building a React application with Vite, Hono, and Cloudflare Workers",
-	"cloudflare": {
-		"label": "Vite React Template",
-		"products": [
-			"Workers"
-		],
-		"categories": [],
-		"preview_icon_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/532a5378-9717-4964-385b-5fafd2160200/public",
-		"preview_image_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/ec7f4be5-d1d6-4e94-0851-126341745400/preview",
-		"publish": true
+	"name": "qr-code-domain",
+	"description": "QR Code Domain — React + Vite frontend deployed on Cloudflare Workers with a Hono API backend",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc -b && vite build",
+		"preview": "npm run build && vite preview",
+		"lint": "eslint .",
+		"deploy": "wrangler deploy",
+		"cf-typegen": "wrangler types",
+		"check": "tsc && vite build && wrangler deploy --dry-run"
 	},
 	"dependencies": {
 		"hono": "4.11.1",
@@ -31,16 +32,5 @@
 		"typescript-eslint": "8.48.0",
 		"vite": "^6.0.0",
 		"wrangler": "4.56.0"
-	},
-	"private": true,
-	"scripts": {
-		"build": "tsc -b && vite build",
-		"cf-typegen": "wrangler types",
-		"check": "tsc && vite build && wrangler deploy --dry-run",
-		"deploy": "wrangler deploy",
-		"dev": "vite",
-		"lint": "eslint .",
-		"preview": "npm run build && vite preview"
-	},
-	"type": "module"
+	}
 }
