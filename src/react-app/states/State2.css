@@ -34,21 +34,6 @@
 	filter: drop-shadow(0 0 22px rgba(255, 100, 150, 0.55));
 }
 
-.state2__heart {
-	display: inline-block;
-	margin: 0 0.45em;
-	color: #ff3d6e;
-	-webkit-text-fill-color: #ff3d6e;
-	background: none;
-	text-shadow: 0 0 12px rgba(255, 61, 110, 0.7);
-	animation: state2-heart-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes state2-heart-pulse {
-	0%, 100% { transform: scale(1); }
-	50% { transform: scale(1.18); }
-}
-
 /* Higher specificity than the global #center img rule */
 #center .state2__image {
 	max-width: 90vw;
