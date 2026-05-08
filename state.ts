@@ -18,4 +18,4 @@
 
 import type { StateKey } from "./src/react-app/states";
 
-export const STATE: StateKey = 2;
+export const STATE: StateKey = 1;

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Romantic stylized header on State 2 — *"♥ I LOVE MY SMOKING HOT GF ♥"* in Cinzel Decorative with a pink-red gradient, glowing pulsing hearts, and a soft pink glow on Jessi.jpg
+- Co-located `State2.css` so each state can own its own styling
 - **State-switching architecture** — single-number page state control via root-level `state.ts`
   - `src/react-app/states/` registry maps numbers to React components
   - Type-safe: `STATE` is constrained to registered keys, invalid values fail the build
