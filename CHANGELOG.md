@@ -8,8 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **State-switching architecture** — single-number page state control via root-level `state.ts`
+  - `src/react-app/states/` registry maps numbers to React components
+  - Type-safe: `STATE` is constrained to registered keys, invalid values fail the build
+  - Designed for mobile editing via GitHub app + Cloudflare auto-deploy
+- `State1` (glorpglorp.gif) and `State2` (Jessi.jpg) as initial states
+- `Jessi.jpg` moved into `public/`
+- Image sizing rules in `index.css` so assets fit the viewport
+- README section documenting state-switching workflow and how to add new states
 - Initial project setup: React 19 + Vite 6 + Hono 4 + Cloudflare Workers
-- `glorpglorp.gif` as the application UI
 - Clean `.gitignore` with Node, Windows, macOS, and Wrangler entries
 
-[Unreleased]: https://github.com/your-username/qr-code-domain/commits/main
+### Removed
+- Duplicate asset folders `Assets/` and `GIF/` at repo root (consolidated into `public/`)
+- Empty `src/react-app/assets/` folder
+
+[Unreleased]: https://github.com/MaximilianWik/vite-react-template/commits/main

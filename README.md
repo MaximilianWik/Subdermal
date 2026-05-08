@@ -2,6 +2,8 @@
 
 A React single-page application deployed as a Cloudflare Worker, with a Hono-powered API backend running at the edge.
 
+The page is reached via QR code and is designed for **fast state switching** — change a single number in `state.ts` and Cloudflare auto-deploys a new look. Editable directly from the GitHub mobile app.
+
 ## Stack
 
 | Layer | Technology |
@@ -9,28 +11,76 @@ A React single-page application deployed as a Cloudflare Worker, with a Hono-pow
 | Frontend | React 19 + TypeScript |
 | Build tool | Vite 6 |
 | API | Hono 4 |
-| Deployment | Cloudflare Workers |
+| Deployment | Cloudflare Workers (auto-deploy on push to `main`) |
 
-## Prerequisites
+## Switching the page state
 
-- [Node.js](https://nodejs.org/) ≥ 18
-- A [Cloudflare account](https://dash.cloudflare.com/sign-up) (for deployment)
+Open **[`state.ts`](./state.ts)** in the repo root and change the number:
 
-## Getting Started
+```ts
+export const STATE: StateKey = 1;  // ← change this
+```
 
-Install dependencies:
+| Value | What is shown |
+|-------|---------------|
+| `1` | `glorpglorp.gif` |
+| `2` | `Jessi.jpg` |
+
+Commit the change. Cloudflare picks it up and redeploys within ~1 minute.
+
+> **Type safety:** `STATE` is typed against the registry, so an invalid number fails the build and Cloudflare won't deploy broken code — the live page is never silently broken.
+
+## Adding a new state
+
+1. **Drop your asset** into [`public/`](./public). It will be served from `/<filename>`.
+2. **Create the state component** at `src/react-app/states/StateN.tsx`:
+   ```tsx
+   export default function StateN() {
+       return <img src="/your-asset.png" alt="..." />;
+   }
+   ```
+   A state can be any React component — image, video, animated canvas, full layout, anything.
+3. **Register it** in [`src/react-app/states/index.ts`](./src/react-app/states/index.ts):
+   ```ts
+   import StateN from "./StateN";
+
+   export const states = {
+       1: State1,
+       2: State2,
+       N: StateN,   // ← add this line
+   } as const;
+   ```
+4. **Activate it** by setting `STATE = N` in `state.ts`.
+
+## Project structure
+
+```
+├── state.ts                       ← THE state switch (edit this)
+├── public/                        ← Static assets (served from /)
+│   ├── glorpglorp.gif
+│   └── Jessi.jpg
+├── src/
+│   ├── react-app/                 ← React frontend
+│   │   ├── App.tsx                ← Reads STATE, renders the matching component
+│   │   ├── main.tsx
+│   │   ├── index.css
+│   │   └── states/                ← One file per page state
+│   │       ├── index.ts           ← Registry: number → component
+│   │       ├── State1.tsx
+│   │       └── State2.tsx
+│   └── worker/                    ← Hono API (Cloudflare Worker)
+│       └── index.ts
+├── index.html
+├── vite.config.ts
+└── wrangler.json                  ← Cloudflare Workers config
+```
+
+## Development
 
 ```bash
 npm install
+npm run dev        # http://localhost:5173
 ```
-
-Start the local development server:
-
-```bash
-npm run dev
-```
-
-The app will be available at [http://localhost:5173](http://localhost:5173).
 
 ## Scripts
 
@@ -40,35 +90,19 @@ The app will be available at [http://localhost:5173](http://localhost:5173).
 | `npm run build` | Type-check and build for production |
 | `npm run preview` | Build then preview locally |
 | `npm run lint` | Run ESLint |
-| `npm run deploy` | Deploy to Cloudflare Workers |
+| `npm run deploy` | Deploy to Cloudflare Workers manually |
 | `npm run cf-typegen` | Regenerate `worker-configuration.d.ts` |
 | `npm run check` | Full type-check + build + deploy dry-run |
 
-## Project Structure
-
-```
-├── public/             # Static assets served as-is
-├── src/
-│   ├── react-app/      # React frontend
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   └── index.css
-│   └── worker/         # Hono API (Cloudflare Worker)
-│       └── index.ts
-├── index.html
-├── vite.config.ts
-└── wrangler.json       # Cloudflare Workers config
-```
-
 ## Deployment
 
-Build and deploy to Cloudflare Workers:
+`main` branch auto-deploys to Cloudflare. Manual deploy:
 
 ```bash
 npm run deploy
 ```
 
-Monitor live logs:
+Live logs:
 
 ```bash
 npx wrangler tail

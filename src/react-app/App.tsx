@@ -1,9 +1,11 @@
-function App() {
+import { STATE } from "../../state";
+import { states } from "./states";
+
+export default function App() {
+	const Active = states[STATE];
 	return (
 		<div id="center">
-			<img src="/glorpglorp.gif" alt="glorpglorp" />
+			<Active />
 		</div>
 	);
 }
-
-export default App;
