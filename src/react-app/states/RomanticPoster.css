@@ -1,0 +1,47 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&display=swap");
+
+.romantic-poster {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: clamp(1rem, 4vh, 3rem);
+	padding: 2rem 1rem;
+	min-height: 100vh;
+	width: 100%;
+}
+
+.romantic-poster__header {
+	margin: 0;
+	max-width: min(95vw, 60rem);
+	font-family: "Cinzel Decorative", "Playfair Display", Georgia, serif;
+	font-weight: 900;
+	font-size: clamp(1.25rem, 5.5vw, 3.25rem);
+	text-align: center;
+	letter-spacing: 0.08em;
+	line-height: 1.25;
+	background: linear-gradient(
+		135deg,
+		#ffb3d1 0%,
+		#ff7eb6 25%,
+		#ff3d6e 55%,
+		#d4145a 80%,
+		#a30f47 100%
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	-webkit-text-fill-color: transparent;
+	filter: drop-shadow(0 0 22px rgba(255, 100, 150, 0.55));
+}
+
+/* Higher specificity than the global #center img rule */
+#center .romantic-poster__image {
+	max-width: 90vw;
+	max-height: 65vh;
+	object-fit: contain;
+	border-radius: 8px;
+	box-shadow:
+		0 0 0 1px rgba(255, 180, 210, 0.25),
+		0 12px 50px rgba(255, 100, 150, 0.35);
+}

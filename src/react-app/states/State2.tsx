@@ -1,10 +1,11 @@
-import "./State2.css";
+import RomanticPoster from "./RomanticPoster";
 
 export default function State2() {
 	return (
-		<div className="state2">
-			<h1 className="state2__header">I LOVE MY SMOKING HOT GF</h1>
-			<img className="state2__image" src="/Jessi.jpg" alt="Jessi" />
-		</div>
+		<RomanticPoster
+			text="I LOVE MY SMOKING HOT GF"
+			src="/Jessi.jpg"
+			alt="Jessi"
+		/>
 	);
 }

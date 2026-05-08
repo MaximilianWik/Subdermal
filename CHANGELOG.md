@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- State 5 — `jonte.jpg` with romantic stylized header *"CHECK OUT MY HOT BOYFRIEND STROKE STROKE VACUUM VACUUM"*
+- Shared `RomanticPoster` component (header + image with the Cinzel + pink-gradient + glow look) — State 2 and State 5 both render through it
 - **State 4 — redirect state.** Set `STATE = 4` and edit `REDIRECT_URL` in `state.ts` to forward visitors to any URL. Useful for repointing the QR code without reprinting it.
 - State 3 — displays `cleo.png`
 - Romantic stylized header on State 2 — *"I LOVE MY SMOKING HOT GF"* in Cinzel Decorative with a pink-red gradient and a soft pink glow on Jessi.jpg
@@ -22,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README section documenting state-switching workflow and how to add new states
 - Initial project setup: React 19 + Vite 6 + Hono 4 + Cloudflare Workers
 - Clean `.gitignore` with Node, Windows, macOS, and Wrangler entries
+
+### Changed
+- Refactored State 2's romantic styling into a reusable `RomanticPoster` component so all "header + image" states share one source of truth. `State2.css` removed (replaced by `RomanticPoster.css`).
 
 ### Removed
 - Duplicate asset folders `Assets/` and `GIF/` at repo root (consolidated into `public/`)
