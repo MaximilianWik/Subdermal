@@ -5,9 +5,10 @@
 //
 //    1 → glorpglorp.gif
 //    2 → Jessi.jpg + romantic header
+//    3 → cleo.png
 //
 // ─────────────────────────────────────────────────────────────
 
 import type { StateKey } from "./src/react-app/states";
 
-export const STATE: StateKey = 2;
+export const STATE: StateKey = 3;
