@@ -24,7 +24,9 @@ export const STATE: StateKey = 1;  // ← change this
 | Value | What is shown |
 |-------|---------------|
 | `1` | `glorpglorp.gif` |
-| `2` | `Jessi.jpg` |
+| `2` | `Jessi.jpg` (with romantic header) |
+| `3` | `cleo.png` |
+| `4` | Redirects the page to `REDIRECT_URL` (also set in `state.ts`) |
 
 Commit the change. Cloudflare picks it up and redeploys within ~1 minute.
 

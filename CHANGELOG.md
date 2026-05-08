@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **State 4 — redirect state.** Set `STATE = 4` and edit `REDIRECT_URL` in `state.ts` to forward visitors to any URL. Useful for repointing the QR code without reprinting it.
 - State 3 — displays `cleo.png`
 - Romantic stylized header on State 2 — *"I LOVE MY SMOKING HOT GF"* in Cinzel Decorative with a pink-red gradient and a soft pink glow on Jessi.jpg
 - Co-located `State2.css` so each state can own its own styling
