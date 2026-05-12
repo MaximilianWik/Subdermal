@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **State 8 — Collaborative canvas (real)**. Replaces the v1 D1-heartbeat placeholder with the full implementation.
+  - **World canvas**: 16384×24576 px shared surface (16× linear, 256× area). All drawings live in absolute world coordinates; rendering uses a viewport-sized canvas with a pan/zoom transform applied (never instantiates a giant HTMLCanvasElement).
+  - **Mode toggle**: `view` (default) → pan/zoom + tap a drawing to open detail; `draw` → tools toolbar visible, single-finger draws, two-finger pinches/pans.
+  - **6 brush types** (pen, pencil, marker, brush, spray, eraser). Each visually distinct via combinations of composite mode, opacity, jitter, and texture. Eraser only removes from the user's own draft strokes — committed drawings can never be erased.
+  - **HSV color picker** with hue ring + S/V square + 10 preset colors + recent-colors history (localStorage).
+  - **Brush size 1–80 px**, eraser size 4–80 px, opacity 5–100% slider.
+  - **Pan/zoom**: two-finger pinch-zoom + drag-pan, mouse-wheel zoom, drag-to-pan in view mode. Zoom range 0.05× (whole canvas visible) → 8× (detail work). "Reset" button re-centers.
+  - **Undo / redo** stacks with 50-step history.
+  - **Draft auto-save** to localStorage (debounced 250ms) — survives page reloads and phone notifications. Restored automatically on next visit.
+  - **Collision enforcement** ("can't draw over others"): on canvas load, all existing strokes rasterize into a 32×32-pixel occupancy grid (49 KB bitmap). Live drawing skips points landing on occupied cells, so your stroke breaks naturally around existing pieces.
+  - **Submit flow**: "Sign & Submit" → name modal (required, max 40 chars) → POST → re-fetches feed → returns to view mode with the new piece visible. The submit modal explicitly shows the public-metadata notice so submission is informed consent.
+  - **Drawing detail card**: tap any piece to open a modal with animated stroke-by-stroke replay (~2.2s), full public metadata grid (country, region, city, postal, timezone, CF colo, IP, viewport, DPR, canvas size, draw time, accept-language, full UA), and a heart/like button.
+  - **Admin mode**: visit any URL with `?admin=<ADMIN_TOKEN>` matching the Workers secret. Detail card adds **Hide drawing** and **Ban IP** buttons (with optional reason prompt). All admin endpoints validate the token server-side.
+- **Migration `0002_extend_drawings.sql`** — adds 19 metadata columns (`ip`, `user_agent`, `accept_language`, `city`, `region`, `colo`, `postal_code`, `timezone`, `viewport_w/h`, `device_pixel_ratio`, `draw_time_ms`, `canvas_width/height`, `likes`, `bbox_*`) and a new `banned_ips` table. Adds `idx_drawings_bbox` for future spatial queries.
+- **Worker API**: `POST /api/drawings` now captures + persists all the metadata above and rejects requests from banned IPs with 403; `GET /api/drawings/:id` returns one drawing's full metadata for the detail view; `POST /api/drawings/:id/like` increments the like counter; `POST /api/admin/drawings/:id/hide`, `/unhide`, `/ban`, `/unban` for moderation (token-gated). All stroke shapes are validated server-side (tool whitelist, hex color regex, point-array shape).
+- **`Cloudflare.Env.ADMIN_TOKEN`** — secret for moderation endpoints. Set via Cloudflare dashboard → Workers → Settings → Variables → Add secret variable.
 - **D1 database integration** — `max-wik-db` (id `6da82e5a-d8b0-449f-8b1c-a53c8f93a768`) bound as `Env.DB` in `wrangler.json`. New `migrations/0001_create_drawings.sql` creates the `drawings` table (append-only, soft-delete via `hidden` flag) for the upcoming collaborative canvas.
 - **Hono API routes** in `src/worker/index.ts`:
   - `GET /api/drawings?cursor=&limit=` — cursor-based paginated feed (default limit 20, max 100). Returns `{ drawings, next_cursor, total }`.

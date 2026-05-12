@@ -1,0 +1,65 @@
+.cp {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem;
+}
+
+.cp__ring {
+	position: relative;
+	touch-action: none;
+}
+.cp__ring canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.cp__hueIndicator {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	border: 2px solid #fff;
+	box-shadow:
+		0 0 0 1px rgba(0, 0, 0, 0.55),
+		0 1px 4px rgba(0, 0, 0, 0.5);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+
+.cp__square {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	border-radius: 6px;
+	overflow: hidden;
+	touch-action: none;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.cp__square canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.cp__svIndicator {
+	position: absolute;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	border: 2px solid #fff;
+	box-shadow:
+		0 0 0 1px rgba(0, 0, 0, 0.6),
+		0 1px 3px rgba(0, 0, 0, 0.5);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+
+.cp__hex {
+	font-family: "Cascadia Code", "SF Mono", Menlo, monospace;
+	font-size: 0.85rem;
+	color: #ddd;
+	letter-spacing: 0.03em;
+}

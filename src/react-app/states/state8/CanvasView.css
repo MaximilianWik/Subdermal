@@ -1,0 +1,21 @@
+.cv {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	touch-action: none;
+	background: #f5f5f5;
+}
+.cv canvas {
+	display: block;
+	user-select: none;
+	-webkit-user-select: none;
+}
+.cv--draw {
+	cursor: crosshair;
+}
+.cv--view {
+	cursor: grab;
+}
+.cv--view:active {
+	cursor: grabbing;
+}

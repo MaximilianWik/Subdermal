@@ -10,13 +10,14 @@
 //    5 → jonte.jpg + romantic header
 //    6 → vCard "Save to Contacts" page (edit details in State6.tsx)
 //    7 → rm -rf chaos cinematic (with /public/glitch image flashing)
-//    8 → Collaborative canvas (placeholder — D1 heartbeat page)
+//    8 → Collaborative canvas — huge shared world canvas with full
+//         drawing tools, pan/zoom, signature/metadata, admin moderation
 //
 // ─────────────────────────────────────────────────────────────
 
 import type { StateKey } from "./src/react-app/states";
 
-export const STATE: StateKey = 7;
+export const STATE: StateKey = 8;
 
 // Only used when STATE = 4. Any absolute URL (https://, mailto:, tel:, etc.)
 export const REDIRECT_URL = "https://example.com";

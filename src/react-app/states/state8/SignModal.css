@@ -1,0 +1,101 @@
+.signOverlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.7);
+	z-index: 100;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+}
+
+.signCard {
+	width: min(94vw, 26rem);
+	background: #181818;
+	border: 1px solid #2a2a2a;
+	border-radius: 16px;
+	padding: 1.5rem;
+	color: #f5f5f5;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui,
+		sans-serif;
+}
+
+.signCard__title {
+	font-size: 1.15rem;
+	font-weight: 600;
+	margin-bottom: 0.3rem;
+}
+.signCard__sub {
+	font-size: 0.85rem;
+	color: #999;
+	margin-bottom: 1rem;
+}
+
+.signCard__input {
+	width: 100%;
+	padding: 0.7rem 0.85rem;
+	border-radius: 9px;
+	background: #0d0d0d;
+	border: 1px solid #333;
+	color: #fff;
+	font-size: 1rem;
+	font-family: inherit;
+	box-sizing: border-box;
+}
+.signCard__input:focus {
+	outline: none;
+	border-color: #60a5fa;
+}
+
+.signCard__notice {
+	margin-top: 0.8rem;
+	padding: 0.7rem 0.8rem;
+	background: rgba(255, 200, 90, 0.07);
+	border: 1px solid rgba(255, 200, 90, 0.25);
+	border-radius: 8px;
+	font-size: 0.78rem;
+	line-height: 1.45;
+	color: #d8c890;
+}
+
+.signCard__error {
+	margin-top: 0.8rem;
+	padding: 0.5rem 0.7rem;
+	background: rgba(255, 90, 90, 0.1);
+	border: 1px solid rgba(255, 90, 90, 0.3);
+	border-radius: 6px;
+	color: #ff8c8c;
+	font-size: 0.8rem;
+	font-family: "Cascadia Code", monospace;
+}
+
+.signCard__actions {
+	display: flex;
+	gap: 0.5rem;
+	margin-top: 1rem;
+}
+.signCard__btn {
+	flex: 1;
+	padding: 0.7rem;
+	border-radius: 9px;
+	border: 1px solid #333;
+	background: #1c1c1c;
+	color: #ddd;
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+.signCard__btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+.signCard__btn--primary {
+	background: #fff;
+	color: #0a0a0a;
+	border-color: #fff;
+	font-weight: 600;
+}

@@ -1,167 +1,84 @@
 .s8 {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 100vh;
-	min-height: 100dvh;
-	width: 100%;
-	padding: 1.5rem;
+	position: fixed;
+	inset: 0;
+	width: 100vw;
+	height: 100vh;
+	height: 100dvh;
+	overflow: hidden;
+	color: #fff;
 	font-family:
 		-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui,
 		sans-serif;
-	color: #f5f5f5;
-}
-
-.s8__card {
-	width: min(94vw, 28rem);
-	padding: 2rem 1.75rem;
-	background: linear-gradient(180deg, #181818 0%, #0d0d0d 100%);
-	border: 1px solid #2a2a2a;
-	border-radius: 16px;
-	box-shadow:
-		0 20px 60px rgba(0, 0, 0, 0.6),
-		inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-	text-align: center;
-}
-
-.s8__title {
-	font-size: 0.85rem;
-	font-weight: 500;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	color: #888;
-	margin-bottom: 1.5rem;
-}
-
-.s8__count {
-	font-size: clamp(3rem, 14vw, 5.5rem);
-	font-weight: 200;
-	letter-spacing: -0.03em;
-	line-height: 1;
-	color: #fff;
-	font-variant-numeric: tabular-nums;
-}
-
-.s8__label {
-	font-size: 0.85rem;
-	color: #777;
-	margin-top: 0.4rem;
-	margin-bottom: 1.6rem;
-}
-
-.s8__actions {
-	display: flex;
-	gap: 0.5rem;
-	flex-wrap: wrap;
-	justify-content: center;
-	margin-bottom: 1rem;
-}
-
-.s8__btn {
-	flex: 1 1 9rem;
-	padding: 0.75rem 1rem;
-	border-radius: 10px;
-	border: 1px solid #333;
-	background: #1c1c1c;
-	color: #ddd;
-	font-size: 0.88rem;
-	font-weight: 500;
-	letter-spacing: 0.01em;
-	cursor: pointer;
-	transition:
-		transform 0.08s ease,
-		background-color 0.15s ease,
-		border-color 0.15s ease;
 	-webkit-tap-highlight-color: transparent;
 }
 
-.s8__btn:active:not(:disabled) {
-	transform: scale(0.98);
+/* Override the global #center img / center wrapper rules — State 8 is
+   fullscreen and absolutely positioned, not centered content. */
+#center .s8 {
+	width: 100vw;
+	height: 100vh;
+	height: 100dvh;
 }
 
-.s8__btn:disabled {
-	opacity: 0.4;
-	cursor: not-allowed;
+.s8__topbar {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	padding: env(safe-area-inset-top, 0) 0.85rem 0;
+	padding-top: max(env(safe-area-inset-top, 0), 0.55rem);
+	z-index: 5;
+	pointer-events: none;
 }
 
-.s8__btn--primary {
+.s8__brand {
+	background: rgba(20, 20, 20, 0.78);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	padding: 0.45rem 0.7rem;
+	border-radius: 9px;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	pointer-events: auto;
+}
+.s8__brandTitle {
+	font-size: 0.85rem;
+	font-weight: 600;
+	letter-spacing: -0.005em;
+	color: #fff;
+}
+.s8__brandSub {
+	font-size: 0.7rem;
+	color: #999;
+	margin-top: 0.1rem;
+}
+
+.s8__drawFab {
+	pointer-events: auto;
+	padding: 0.55rem 0.95rem;
+	border-radius: 9px;
 	background: #fff;
 	color: #0a0a0a;
-	border-color: #fff;
-}
-.s8__btn--primary:active:not(:disabled) {
-	background: #ebebeb;
-}
-
-.s8__error {
-	margin-top: 0.6rem;
-	padding: 0.55rem 0.75rem;
-	border-radius: 8px;
-	background: rgba(255, 90, 90, 0.08);
-	border: 1px solid rgba(255, 90, 90, 0.3);
-	color: #ff8c8c;
-	font-size: 0.8rem;
-	text-align: left;
-	font-family:
-		"Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
-	word-break: break-word;
+	border: none;
+	font-size: 0.88rem;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+	-webkit-tap-highlight-color: transparent;
 }
 
-.s8__sectionLabel {
-	margin-top: 1.5rem;
-	font-size: 0.7rem;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	color: #555;
-	text-align: left;
-	border-top: 1px solid #222;
-	padding-top: 1rem;
-}
-
-.s8__list {
-	margin-top: 0.5rem;
-	display: flex;
-	flex-direction: column;
-	gap: 0.35rem;
-}
-
-.s8__row {
-	display: grid;
-	grid-template-columns: 2.6rem 1fr auto auto;
-	gap: 0.6rem;
-	align-items: center;
-	font-size: 0.8rem;
-	color: #aaa;
-	font-family:
-		"Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
-	padding: 0.35rem 0;
-	border-bottom: 1px dashed #1f1f1f;
-}
-.s8__row:last-child {
-	border-bottom: none;
-}
-
-.s8__id {
-	color: #666;
-}
-.s8__name {
+.s8__loadingPill {
+	position: absolute;
+	left: 50%;
+	bottom: 4rem;
+	transform: translateX(-50%);
+	background: rgba(20, 20, 20, 0.9);
 	color: #ddd;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	text-align: left;
-}
-.s8__country {
-	color: #777;
-	font-size: 0.75rem;
-}
-.s8__when {
-	color: #666;
-	font-size: 0.75rem;
-}
-
-.s8__empty {
-	font-size: 0.85rem;
-	color: #555;
-	padding: 0.5rem 0;
+	padding: 0.45rem 0.85rem;
+	border-radius: 999px;
+	font-size: 0.78rem;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	z-index: 60;
 }

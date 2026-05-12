@@ -18,5 +18,12 @@
 declare namespace Cloudflare {
 	interface Env {
 		DB: D1Database;
+		/**
+		 * Admin token for moderation endpoints (delete / hide / ban).
+		 * Set via Cloudflare dashboard → Workers → Settings →
+		 * Variables → Add secret variable. Or: `wrangler secret put ADMIN_TOKEN`.
+		 * Compared against the `?admin=` query param.
+		 */
+		ADMIN_TOKEN?: string;
 	}
 }

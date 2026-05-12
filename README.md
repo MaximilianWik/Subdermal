@@ -30,7 +30,7 @@ export const STATE: StateKey = 1;  // ← change this
 | `5` | `jonte.jpg` (with romantic header) |
 | `6` | vCard "Save to Contacts" page — downloads a `.vcf` (edit fields at the top of `State6.tsx`) |
 | `7` | `rm -rf /` chaos cinematic — typewritten `sudo rm -rf / --no-preserve-root` followed by a flood of deletion output, glitch transition, then a "…just kidding." reveal |
-| `8` | Collaborative canvas (placeholder — D1 heartbeat page showing total drawings + last 5 entries, with a "submit test drawing" button) |
+| `8` | Collaborative canvas — huge shared world canvas (16384×24576) where anyone can draw with 6 brush types (pen / pencil / marker / brush / spray / eraser), pinch-zoom, two-finger pan, undo/redo, draft auto-save, and "can't draw over others" enforcement. Tap any drawing for its signature card with full public metadata (name, country, city, IP, UA, device, draw time, likes). Animated stroke replay on detail open. Admin mode (`?admin=<token>`) adds Hide / Ban-IP buttons. |
 
 Commit the change. Cloudflare picks it up and redeploys within ~1 minute.
 
