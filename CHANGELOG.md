@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **D1 database integration** — `max-wik-db` (id `6da82e5a-d8b0-449f-8b1c-a53c8f93a768`) bound as `Env.DB` in `wrangler.json`. New `migrations/0001_create_drawings.sql` creates the `drawings` table (append-only, soft-delete via `hidden` flag) for the upcoming collaborative canvas.
+- **Hono API routes** in `src/worker/index.ts`:
+  - `GET /api/drawings?cursor=&limit=` — cursor-based paginated feed (default limit 20, max 100). Returns `{ drawings, next_cursor, total }`.
+  - `POST /api/drawings` — submit a drawing. Validates JSON, enforces 80 KB max strokes payload, name max 40 chars. Logs `cf.country` automatically (no IP stored). Returns `{ id, created_at }`.
+- **State 8 — Canvas (placeholder)**. D1 heartbeat page that GETs `/api/drawings` to show the running total + last 5 entries, with a "submit test drawing" button that POSTs a minimal stroke payload. Will be replaced by the real collaborative canvas UI in the next iteration.
+- `src/worker/env.d.ts` — manual augmentation of `Cloudflare.Env` declaring `DB: D1Database` so `tsc -b` always sees the binding even before `npm run cf-typegen` has been run on a fresh clone.
 - **State 7 — `rm -rf /` chaos cinematic.** Three-phase sequence: black terminal types `sudo rm -rf / --no-preserve-root` and floods deletion output across realistic Linux paths → 500ms RGB-tear glitch transition → black-screen reveal that types `…just kidding.` with a `— m` signature. CRT scanlines and subtle flicker overlay throughout.
 - **State 6 — vCard "Save to Contacts" page.** Downloads a vCard 3.0 `.vcf` when the visitor taps the button; works on iOS Safari (native contact preview), Android Chrome, and desktop. Contact fields live in an editable constant at the top of `State6.tsx`. The page only renders name + organization — phone, email, etc. stay private inside the `.vcf` so the page is safe to display in public.
 - State 5 — `jonte.jpg` with romantic stylized header *"CHECK OUT MY HOT BOYFRIEND STROKE STROKE VACUUM VACUUM"*

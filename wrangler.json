@@ -11,5 +11,13 @@
 	"assets": {
 		"directory": "./dist/client",
 		"not_found_handling": "single-page-application"
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "max-wik-db",
+			"database_id": "6da82e5a-d8b0-449f-8b1c-a53c8f93a768",
+			"migrations_dir": "migrations"
+		}
+	]
 }

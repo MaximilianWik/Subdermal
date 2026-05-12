@@ -30,6 +30,7 @@ export const STATE: StateKey = 1;  // ← change this
 | `5` | `jonte.jpg` (with romantic header) |
 | `6` | vCard "Save to Contacts" page — downloads a `.vcf` (edit fields at the top of `State6.tsx`) |
 | `7` | `rm -rf /` chaos cinematic — typewritten `sudo rm -rf / --no-preserve-root` followed by a flood of deletion output, glitch transition, then a "…just kidding." reveal |
+| `8` | Collaborative canvas (placeholder — D1 heartbeat page showing total drawings + last 5 entries, with a "submit test drawing" button) |
 
 Commit the change. Cloudflare picks it up and redeploys within ~1 minute.
 

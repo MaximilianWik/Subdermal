@@ -5,12 +5,13 @@ import State4 from "./State4";
 import State5 from "./State5";
 import State6 from "./State6";
 import State7 from "./State7";
+import State8 from "./State8";
 
 // Registry of all available page states.
 //
 // Keys must be the same numbers used in /state.ts.
 // `as const` keeps the keys as literal types so that StateKey
-// resolves to a strict union (e.g. 1 | 2 | 3 | 4 | 5 | 6 | 7) rather than `number`.
+// resolves to a strict union (e.g. 1 | 2 | 3 | ... | 8) rather than `number`.
 //
 // To add a new state: import it above and add it here.
 export const states = {
@@ -21,6 +22,7 @@ export const states = {
 	5: State5,
 	6: State6,
 	7: State7,
+	8: State8,
 } as const;
 
 export type StateKey = keyof typeof states;
