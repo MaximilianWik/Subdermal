@@ -47,8 +47,9 @@ interface IncomingDrawing {
 //  Helpers
 // ─────────────────────────────────────────────────────────────
 function checkAdmin(c: { req: { query: (k: string) => string | undefined } }, env: Env): boolean {
-	const t = c.req.query("admin");
-	return !!env.ADMIN_TOKEN && !!t && t === env.ADMIN_TOKEN;
+	const t = c.req.query("admin")?.trim();
+	const expected = env.ADMIN_TOKEN?.trim();
+	return !!expected && !!t && t === expected;
 }
 
 function calcBbox(strokes: IncomingStroke[]): {
@@ -340,6 +341,25 @@ app.post("/api/drawings/:id/like", async (c) => {
 
 // ─── Admin endpoints ─────────────────────────────────────────
 // All require ?admin=<ADMIN_TOKEN> query param matching the Workers secret.
+
+// GET /api/admin/check — diagnostic: confirm token plumbing without
+// leaking the actual values. Visit /api/admin/check?admin=<token> to
+// see if the comparison succeeds and check both lengths.
+app.get("/api/admin/check", async (c) => {
+	const raw = c.req.query("admin");
+	const env = c.env.ADMIN_TOKEN;
+	const t = raw?.trim();
+	const e = env?.trim();
+	return c.json({
+		ok: !!e && !!t && t === e,
+		envHasToken: !!env,
+		envLen: env ? env.length : 0,
+		envTrimmedLen: e ? e.length : 0,
+		queryHasToken: !!raw,
+		queryLen: raw ? raw.length : 0,
+		queryTrimmedLen: t ? t.length : 0,
+	});
+});
 
 app.post("/api/admin/drawings/:id/hide", async (c) => {
 	if (!checkAdmin(c, c.env)) return c.json({ error: "forbidden" }, 403);
