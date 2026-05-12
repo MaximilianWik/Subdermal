@@ -13,6 +13,7 @@ import {
 	INITIAL_VIEW_H,
 	ZOOM_MIN,
 	ZOOM_MAX,
+	PIXEL_CELL,
 } from "./types";
 import { OccupancyGrid } from "./occupancy";
 import { drawStrokes } from "./render";
@@ -289,6 +290,33 @@ export default function CanvasView({
 				eraseAt(wx, wy);
 				return;
 			}
+			if (tool === "pixel") {
+				// Snap to PIXEL_CELL grid and seed a single-cell stroke.
+				const cellX = Math.floor(wx / PIXEL_CELL) * PIXEL_CELL;
+				const cellY = Math.floor(wy / PIXEL_CELL) * PIXEL_CELL;
+				const inBounds =
+					cellX >= 0 &&
+					cellY >= 0 &&
+					cellX < WORLD_W &&
+					cellY < WORLD_H;
+				const cx = cellX + PIXEL_CELL / 2;
+				const cy = cellY + PIXEL_CELL / 2;
+				const blocked =
+					!inBounds ||
+					occupancyRef.current.isWorldPointOccupied(cx, cy);
+				currentStrokeRef.current = {
+					tool,
+					color,
+					size: PIXEL_CELL,
+					opacity,
+					points: blocked ? [] : [cellX, cellY],
+				};
+				if (!blocked) {
+					liveStrokesRef.current.push(currentStrokeRef.current);
+				}
+				scheduleDraw();
+				return;
+			}
 			// Skip if this point is already occupied by another drawing
 			if (
 				occupancyRef.current.isWorldPointOccupied(wx, wy) &&
@@ -372,6 +400,44 @@ export default function CanvasView({
 			}
 			const cur = currentStrokeRef.current;
 			if (!cur) return;
+
+			if (tool === "pixel") {
+				// Snap to grid; skip when the dragged finger is in the
+				// same cell as the last placed pixel; skip cells that
+				// collide with existing drawings; skip out-of-bounds.
+				const cellX = Math.floor(wx / PIXEL_CELL) * PIXEL_CELL;
+				const cellY = Math.floor(wy / PIXEL_CELL) * PIXEL_CELL;
+				if (
+					cellX < 0 ||
+					cellY < 0 ||
+					cellX >= WORLD_W ||
+					cellY >= WORLD_H
+				) {
+					return;
+				}
+				const len = cur.points.length;
+				if (
+					len >= 2 &&
+					cur.points[len - 2] === cellX &&
+					cur.points[len - 1] === cellY
+				) {
+					return; // same cell as last point
+				}
+				const cx = cellX + PIXEL_CELL / 2;
+				const cy = cellY + PIXEL_CELL / 2;
+				if (occupancyRef.current.isWorldPointOccupied(cx, cy)) {
+					return;
+				}
+				if (cur.points.length === 0) {
+					cur.points.push(cellX, cellY);
+					liveStrokesRef.current.push(cur);
+				} else {
+					cur.points.push(cellX, cellY);
+				}
+				scheduleDraw();
+				return;
+			}
+
 			// Skip occupied cells — break the stroke around obstacles
 			if (occupancyRef.current.isWorldPointOccupied(wx, wy)) {
 				if (cur.points.length > 0) {

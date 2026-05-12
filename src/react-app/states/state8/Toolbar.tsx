@@ -39,6 +39,7 @@ const TOOLS: Array<{ id: ToolType; label: string; icon: string }> = [
 	{ id: "calligraphy", label: "Calligraphy", icon: "✍" },
 	{ id: "spray", label: "Spray", icon: "✦" },
 	{ id: "airbrush", label: "Airbrush", icon: "◉" },
+	{ id: "pixel", label: "Pixel", icon: "▦" },
 	{ id: "eraser", label: "Eraser", icon: "⌫" },
 ];
 
@@ -99,6 +100,7 @@ export default function Toolbar(props: Props) {
 	const [recents, setRecents] = useState<string[]>(loadRecentColors);
 
 	const isEraser = tool === "eraser";
+	const isPixel = tool === "pixel";
 	const sizeMin = isEraser ? ERASER_SIZE_MIN : BRUSH_SIZE_MIN;
 	const sizeMax = isEraser ? ERASER_SIZE_MAX : BRUSH_SIZE_MAX;
 
@@ -145,8 +147,9 @@ export default function Toolbar(props: Props) {
 						max={sizeMax}
 						value={size}
 						onChange={(e) => onSize(parseInt(e.target.value, 10))}
+						disabled={isPixel}
 					/>
-					<span className="tb__sliderValue">{size}</span>
+					<span className="tb__sliderValue">{isPixel ? 32 : size}</span>
 				</div>
 				<div className="tb__sliderGroup">
 					<span className="tb__sliderIcon">◐</span>
@@ -160,7 +163,7 @@ export default function Toolbar(props: Props) {
 						onChange={(e) =>
 							onOpacity(parseInt(e.target.value, 10) / 100)
 						}
-						disabled={isEraser}
+						disabled={isEraser || isPixel}
 					/>
 					<span className="tb__sliderValue">
 						{Math.round(opacity * 100)}%

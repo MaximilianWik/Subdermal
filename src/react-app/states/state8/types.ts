@@ -12,6 +12,7 @@ export type ToolType =
 	| "calligraphy"
 	| "spray"
 	| "airbrush"
+	| "pixel"
 	| "eraser";
 
 /** A single brush gesture. Coordinates are in WORLD space (not screen). */
@@ -76,6 +77,11 @@ export const BRUSH_SIZE_MIN = 1;
 export const BRUSH_SIZE_MAX = 80;
 export const ERASER_SIZE_MIN = 4;
 export const ERASER_SIZE_MAX = 80;
+
+// Pixel art cell size — must match the minor grid spacing in
+// CanvasView's drawGrid so each filled pixel sits exactly inside
+// one of the visible small grid squares.
+export const PIXEL_CELL = 32;
 
 // Occupancy grid cell size — coarser = faster but blockier collision.
 // At 16px cells, a 16384×24576 world is 1024×1536 = 1.57M cells = 196 KB.

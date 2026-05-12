@@ -1,4 +1,5 @@
 import type { Stroke, ToolType } from "./types";
+import { PIXEL_CELL } from "./types";
 
 // ─────────────────────────────────────────────────────────────
 //  Stroke rendering — 10 brush types, each visually distinct.
@@ -57,6 +58,9 @@ export function drawStroke(
 			break;
 		case "airbrush":
 			renderAirbrush(ctx, stroke, limit);
+			break;
+		case "pixel":
+			renderPixel(ctx, stroke, limit);
 			break;
 		case "eraser":
 			// Never rendered — eraser strokes mutate the user's draft array
@@ -371,6 +375,24 @@ function hexWithAlpha(hex: string, alpha: number): string {
 	return `${hex}${a}`;
 }
 
+// ─── 10. Pixel — fills exactly one minor-grid cell per point ──
+//
+// Each point in the stroke is the TOP-LEFT corner of a snapped
+// PIXEL_CELL×PIXEL_CELL square, in world coords. No anti-aliasing,
+// no overlap between adjacent cells (origins are 32-px aligned).
+function renderPixel(
+	ctx: CanvasRenderingContext2D,
+	s: Stroke,
+	limit: number,
+): void {
+	ctx.globalCompositeOperation = "source-over";
+	ctx.globalAlpha = s.opacity;
+	ctx.fillStyle = s.color;
+	for (let i = 0; i < limit; i += 2) {
+		ctx.fillRect(s.points[i], s.points[i + 1], PIXEL_CELL, PIXEL_CELL);
+	}
+}
+
 // ─── Bulk renderers ──────────────────────────────────────────
 
 export function totalPoints(strokes: Stroke[]): number {
@@ -415,5 +437,6 @@ export const TOOL_LIST: ToolType[] = [
 	"calligraphy",
 	"spray",
 	"airbrush",
+	"pixel",
 	"eraser",
 ];

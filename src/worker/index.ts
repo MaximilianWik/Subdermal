@@ -26,6 +26,7 @@ type ToolType =
 	| "calligraphy"
 	| "spray"
 	| "airbrush"
+	| "pixel"
 	| "eraser";
 interface IncomingStroke {
 	tool: ToolType;
@@ -64,13 +65,17 @@ function calcBbox(strokes: IncomingStroke[]): {
 		y2 = -Infinity;
 	for (const s of strokes) {
 		const pts = s.points;
+		// Pixel strokes store cell ORIGIN (top-left); their drawn extent
+		// is one PIXEL_CELL beyond x/y. All other tools draw centered
+		// on the point so the raw point bbox is a fine approximation.
+		const ext = s.tool === "pixel" ? PIXEL_CELL : 0;
 		for (let i = 0; i < pts.length; i += 2) {
 			const x = pts[i];
 			const y = pts[i + 1];
 			if (x < x1) x1 = x;
 			if (y < y1) y1 = y;
-			if (x > x2) x2 = x;
-			if (y > y2) y2 = y;
+			if (x + ext > x2) x2 = x + ext;
+			if (y + ext > y2) y2 = y + ext;
 		}
 	}
 	if (!Number.isFinite(x1)) {
@@ -103,8 +108,11 @@ const VALID_TOOLS: ReadonlyArray<ToolType> = [
 	"calligraphy",
 	"spray",
 	"airbrush",
+	"pixel",
 	"eraser",
 ];
+
+const PIXEL_CELL = 32;
 
 function validateStroke(s: unknown): IncomingStroke | null {
 	if (!s || typeof s !== "object") return null;
