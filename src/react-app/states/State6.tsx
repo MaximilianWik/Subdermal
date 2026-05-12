@@ -1,4 +1,5 @@
 import "./State6.css";
+import { PHOTO_B64 } from "./State6.photo";
 
 // ─────────────────────────────────────────────────────────────
 //  vCard — "Save my contact" page.
@@ -18,17 +19,26 @@ const VCARD = {
 	phone: "+46707360515",
 	email: "max.wik@icloud.com",
 
-	// Profile picture, served from /public. Embedded in the .vcf as an
-	// absolute URL so iOS/Android fetch and cache it locally on save.
-	photo: "/maximilian.png",
+	// Profile picture displayed on the page (sharp, full resolution).
+	// The .vcf payload uses a separately resized JPEG embedded as base64
+	// — see State6.photo.ts for regeneration instructions.
+	photoSrc: "/maximilian.png",
 
 	// URLs in display order. Each gets a custom label via Apple's
-	// itemN.X-ABLabel extension — proper labels in iOS/macOS Contacts
-	// ("Homepage", "GitHub"); Android shows the URL with a generic
-	// "Website" label. Add/remove/reorder freely.
+	// itemN.X-ABLabel extension — proper labels in iOS/macOS Contacts;
+	// Android shows the URL with a generic "Website" label. Add/remove
+	// /reorder freely.
+	//
+	// Non-ASCII characters in URLs MUST be percent-encoded per RFC 3986
+	// (e.g. ö → %C3%B6) for cross-parser compatibility.
 	urls: [
 		{ label: "Homepage", url: "https://maximilian-wikstrom.vercel.app/" },
 		{ label: "GitHub", url: "https://github.com/MaximilianWik" },
+		{
+			label: "LinkedIn",
+			url: "https://se.linkedin.com/in/maximilian-wikstr%C3%B6m",
+		},
+		{ label: "Tessera", url: "https://tessera-neon.vercel.app/" },
 	],
 
 	note: "Saved from a QR tattoo.",
@@ -47,7 +57,25 @@ function vEscape(s: string): string {
 		.replace(/;/g, "\\;");
 }
 
-function buildVCard(origin: string): string {
+/**
+ * Fold a single line per RFC 2425 §5.8.1: lines longer than `max` octets
+ * are split, with each continuation line starting with a single space
+ * (which the parser strips on unfolding). Required for embedded photos —
+ * strict parsers reject overlong lines.
+ */
+function foldLine(line: string, max = 75): string {
+	if (line.length <= max) return line;
+	const out: string[] = [line.slice(0, max)];
+	let i = max;
+	const contLen = max - 1; // continuation lines reserve 1 octet for the leading space
+	while (i < line.length) {
+		out.push(" " + line.slice(i, i + contLen));
+		i += contLen;
+	}
+	return out.join("\r\n");
+}
+
+function buildVCard(): string {
 	const d = VCARD;
 	const fullName = `${d.firstName} ${d.lastName}`.trim();
 	const lines: string[] = [
@@ -70,34 +98,33 @@ function buildVCard(origin: string): string {
 		lines.push(`${item}.X-ABLabel:${vEscape(u.label)}`);
 	});
 
-	// Profile picture: external URL reference. The contact app fetches it
-	// once on save and caches it locally on the device, so it survives even
-	// if the domain ever lapses (for everyone who already saved you).
-	if (d.photo) {
-		const abs = /^https?:\/\//.test(d.photo) ? d.photo : `${origin}${d.photo}`;
-		lines.push(`PHOTO;VALUE=URL:${abs}`);
+	// Profile picture: embedded base64 JPEG. iOS Contacts ignores the URL
+	// form (PHOTO;VALUE=URL) in most versions — embedded is the form that
+	// reliably renders in the saved contact.
+	if (PHOTO_B64) {
+		lines.push(`PHOTO;ENCODING=b;TYPE=JPEG:${PHOTO_B64}`);
 	}
 
 	if (d.note) lines.push(`NOTE:${vEscape(d.note)}`);
 	lines.push("END:VCARD", "");
-	// vCard requires CRLF line endings.
-	return lines.join("\r\n");
+
+	// vCard requires CRLF line endings, and lines must not exceed 75 octets.
+	return lines.map((l) => foldLine(l)).join("\r\n");
 }
 
-// Vite SPA bundles run in the browser only — `window` is always defined at
-// module init. The defensive check just keeps SSR/test environments safe.
-const ORIGIN = typeof window !== "undefined" ? window.location.origin : "";
-const HREF = `data:text/vcard;charset=utf-8,${encodeURIComponent(
-	buildVCard(ORIGIN),
-)}`;
+const HREF = `data:text/vcard;charset=utf-8,${encodeURIComponent(buildVCard())}`;
 
 export default function State6() {
 	const fullName = `${VCARD.firstName} ${VCARD.lastName}`.trim();
 	return (
 		<div className="vcard">
 			<div className="vcard__card">
-				{VCARD.photo && (
-					<img className="vcard__photo" src={VCARD.photo} alt={fullName} />
+				{VCARD.photoSrc && (
+					<img
+						className="vcard__photo"
+						src={VCARD.photoSrc}
+						alt={fullName}
+					/>
 				)}
 				<div className="vcard__name">{fullName}</div>
 				{VCARD.organization && (
