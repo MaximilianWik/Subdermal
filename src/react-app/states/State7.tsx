@@ -4,20 +4,20 @@ import "./State7.css";
 // ─────────────────────────────────────────────────────────────
 //  State 7 — `rm -rf /` chaos cinematic.
 //
-//  Phase timeline (auto-advances; total ~3.8s before reveal):
+//  Phase timeline (auto-advances; total ~5.5s before reveal):
 //    0.0s  terminal  Black screen, types `sudo rm -rf / --no-preserve-root`
 //                    one char at a time, then floods deletion output
-//    2.05s glitch    1.75s of rapid-fire image flashes from /public/glitch
+//    4.1s  glitch    1.4s of rapid-fire image flashes from /public/glitch
 //                    with randomized color filters and transforms
-//    3.8s  reveal    Black screen, types "...just kidding."
+//    5.5s  reveal    Black screen, types "...just kidding."
 // ─────────────────────────────────────────────────────────────
 
 type Phase = "terminal" | "glitch" | "reveal";
 
 const TIMELINE: Array<{ phase: Phase; at: number }> = [
 	{ phase: "terminal", at: 0 },
-	{ phase: "glitch", at: 2050 },
-	{ phase: "reveal", at: 3800 },
+	{ phase: "glitch", at: 4100 },
+	{ phase: "reveal", at: 5500 },
 ];
 
 // All 14 images in /public/glitch, in filename order.
