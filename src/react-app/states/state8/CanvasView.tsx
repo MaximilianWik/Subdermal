@@ -99,9 +99,6 @@ export default function CanvasView({
 		moved: boolean;
 	} | null>(null);
 
-	const [, setRedraw] = useState(0);
-	const requestRedraw = () => setRedraw((n) => n + 1);
-
 	// ─── Imperative API ─────────────────────────────────────
 	useImperativeHandle(canvasRef, () => ({
 		setDraft: (strokes: Stroke[]) => {
@@ -585,7 +582,3 @@ function findDrawingAt(
 	}
 	return null;
 }
-
-// Keep imports referenced even if a future refactor drops one — guards
-// against silent dead-import accumulation.
-void drawStroke;
