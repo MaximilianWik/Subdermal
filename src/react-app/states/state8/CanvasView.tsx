@@ -178,17 +178,23 @@ export default function CanvasView({
 	}, []);
 
 	// ─── Render loop (RAF on demand) ────────────────────────
+	//
+	// The render function is assigned to a ref every render so the stable
+	// scheduleDraw closure always invokes the LATEST version (with the
+	// current `existing` array baked into its closure). Without this, the
+	// canvas would render against whatever `existing` was on first mount.
+	const drawAllRef = useRef<() => void>(() => {});
 	const drawScheduledRef = useRef(false);
 	const scheduleDraw = useCallback(() => {
 		if (drawScheduledRef.current) return;
 		drawScheduledRef.current = true;
 		requestAnimationFrame(() => {
 			drawScheduledRef.current = false;
-			drawAll();
+			drawAllRef.current();
 		});
 	}, []);
 
-	const drawAll = useCallback(() => {
+	drawAllRef.current = () => {
 		const canvas = canvasElRef.current;
 		const wrap = wrapRef.current;
 		if (!canvas || !wrap) return;
@@ -226,8 +232,7 @@ export default function CanvasView({
 		ctx.lineWidth = 2 / v.zoom;
 		ctx.strokeStyle = "rgba(0,0,0,0.18)";
 		ctx.strokeRect(0, 0, WORLD_W, WORLD_H);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [existing]);
+	};
 
 	// Schedule redraw whenever inputs that affect static rendering change
 	useEffect(scheduleDraw, [existing, scheduleDraw]);
