@@ -227,7 +227,3 @@ function Reveal() {
 		</div>
 	);
 }
-
-// (useRef kept import-clean — silence unused-import linter false-positive
-//  in case future phases need refs again. Remove if it ever bothers you.)
-void useRef;
