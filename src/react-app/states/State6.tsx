@@ -12,16 +12,16 @@ import "./State6.css";
 // ─────────────────────────────────────────────────────────────
 const VCARD = {
 	firstName: "Maximilian",
-	lastName: "Wik",
+	lastName: "Wikström",
 	organization: "DNB Bank ASA",
 	title: "", // e.g. "Software Engineer"
-	phone: "", // e.g. "+47 12345678"
-	email: "", // e.g. "you@example.com"
+	phone: "+46707360515",
+	email: "max.wik@icloud.com",
 	url: "https://github.com/MaximilianWik",
 	note: "Saved from a QR tattoo.",
 };
 
-const FILENAME = "MaximilianWik.vcf";
+const FILENAME = "MaximilianWikstrom.vcf";
 const BUTTON_LABEL = "Save to Contacts";
 // ─────────────────────────────────────────────────────────────
 
