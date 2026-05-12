@@ -9,12 +9,13 @@
 //    4 → redirect to REDIRECT_URL (set below)
 //    5 → jonte.jpg + romantic header
 //    6 → vCard "Save to Contacts" page (edit details in State6.tsx)
+//    7 → BSOD / kernel panic / rm -rf chaos cinematic
 //
 // ─────────────────────────────────────────────────────────────
 
 import type { StateKey } from "./src/react-app/states";
 
-export const STATE: StateKey = 6;
+export const STATE: StateKey = 7;
 
 // Only used when STATE = 4. Any absolute URL (https://, mailto:, tel:, etc.)
 export const REDIRECT_URL = "https://example.com";

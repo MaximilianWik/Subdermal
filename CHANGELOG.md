@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **State 7 — BSOD / kernel-panic / rm -rf chaos cinematic.** Five-phase scripted sequence designed to be indistinguishable from a real crash for the first ~2.5s, then escalate into pure chaos before revealing the prank: pixel-perfect Windows 11 BSOD (climbing %, randomized stop code, fake QR) → 500ms RGB-tear glitch transition → black terminal that types `sudo rm -rf / --no-preserve-root` and floods deletion output → Linux kernel panic dump with shaking RGB-split text and register dumps → black-screen reveal that types `…just kidding.` with a `— m` signature. Vibrates on phase entry on Android. CRT scanlines and flicker overlay throughout.
 - **State 6 — vCard "Save to Contacts" page.** Downloads a vCard 3.0 `.vcf` when the visitor taps the button; works on iOS Safari (native contact preview), Android Chrome, and desktop. Contact fields live in an editable constant at the top of `State6.tsx`. The page only renders name + organization — phone, email, etc. stay private inside the `.vcf` so the page is safe to display in public.
 - State 5 — `jonte.jpg` with romantic stylized header *"CHECK OUT MY HOT BOYFRIEND STROKE STROKE VACUUM VACUUM"*
 - Shared `RomanticPoster` component (header + image with the Cinzel + pink-gradient + glow look) — State 2 and State 5 both render through it

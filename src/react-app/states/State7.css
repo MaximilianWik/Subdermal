@@ -1,0 +1,286 @@
+/* ─────────────────────────────────────────────────────────────
+   State 7 — BSOD / Kernel panic / rm -rf chaos cinematic.
+   Phase machine: bsod → glitch → terminal → panic → reveal.
+   Designed to be indistinguishable from a real BSOD for ~2.5s.
+   ───────────────────────────────────────────────────────────── */
+
+.s7 {
+	position: fixed;
+	inset: 0;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+	font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+	color: #fff;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* Subtle CRT scanlines overlay applied to every phase */
+.s7::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: repeating-linear-gradient(
+		0deg,
+		rgba(0, 0, 0, 0) 0px,
+		rgba(0, 0, 0, 0) 2px,
+		rgba(0, 0, 0, 0.06) 3px,
+		rgba(0, 0, 0, 0) 4px
+	);
+	mix-blend-mode: multiply;
+	z-index: 1000;
+}
+
+/* CRT flicker on the whole screen */
+.s7 {
+	animation: s7-flicker 4s steps(20, end) infinite;
+}
+@keyframes s7-flicker {
+	0%,
+	95%,
+	100% {
+		opacity: 1;
+	}
+	96% {
+		opacity: 0.96;
+	}
+	97% {
+		opacity: 1;
+	}
+	98% {
+		opacity: 0.92;
+	}
+}
+
+/* ─────────  PHASE 1: WINDOWS 11 BSOD  ───────── */
+.s7-bsod {
+	position: absolute;
+	inset: 0;
+	background: #0078d4;
+	color: #fff;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: clamp(1.5rem, 6vw, 4rem);
+	box-sizing: border-box;
+	font-weight: 300;
+	letter-spacing: 0.01em;
+}
+
+.s7-bsod__face {
+	font-size: clamp(5rem, 18vw, 10rem);
+	font-weight: 100;
+	line-height: 1;
+	margin-bottom: clamp(1rem, 4vh, 2.5rem);
+	transform: rotate(90deg) scaleX(-1);
+	transform-origin: 0.45em 0.5em;
+	width: 1em;
+	font-family: "Segoe UI", sans-serif;
+}
+
+.s7-bsod__title {
+	font-size: clamp(1rem, 4.5vw, 2rem);
+	line-height: 1.35;
+	max-width: 36em;
+	margin-bottom: clamp(0.6rem, 2vh, 1.5rem);
+}
+
+.s7-bsod__sub {
+	font-size: clamp(0.85rem, 3vw, 1.15rem);
+	line-height: 1.45;
+	max-width: 36em;
+	margin-bottom: clamp(1rem, 3vh, 2rem);
+	opacity: 0.95;
+}
+
+.s7-bsod__progress {
+	font-size: clamp(0.85rem, 3vw, 1.15rem);
+	margin-bottom: clamp(1rem, 4vh, 2.5rem);
+}
+
+.s7-bsod__qrwrap {
+	display: flex;
+	gap: clamp(1rem, 3vw, 2rem);
+	align-items: flex-start;
+	flex-wrap: wrap;
+}
+
+.s7-bsod__qr {
+	width: clamp(80px, 22vw, 130px);
+	height: clamp(80px, 22vw, 130px);
+	background: #fff;
+	flex-shrink: 0;
+	display: grid;
+	grid-template-columns: repeat(13, 1fr);
+	grid-template-rows: repeat(13, 1fr);
+	gap: 0;
+}
+.s7-bsod__qr span {
+	background: #000;
+}
+
+.s7-bsod__info {
+	font-size: clamp(0.7rem, 2.4vw, 0.9rem);
+	line-height: 1.5;
+	max-width: 28em;
+	opacity: 0.9;
+}
+
+.s7-bsod__info b {
+	font-weight: 600;
+}
+
+.s7-bsod__info code {
+	font-family: "Cascadia Code", "Consolas", monospace;
+	font-size: 0.95em;
+}
+
+/* ─────────  GLITCH TRANSITION  ───────── */
+.s7-glitch {
+	position: absolute;
+	inset: 0;
+	background: #000;
+	animation: s7-glitch 0.5s steps(8, end);
+}
+@keyframes s7-glitch {
+	0% {
+		background: #fff;
+		filter: invert(1);
+	}
+	20% {
+		background: #0078d4;
+		transform: translate(-4px, 2px);
+	}
+	40% {
+		background: #ff0040;
+		transform: translate(6px, -3px);
+	}
+	60% {
+		background: #00ff66;
+		transform: translate(-2px, 4px);
+	}
+	80% {
+		background: #000;
+		filter: hue-rotate(120deg);
+	}
+	100% {
+		background: #000;
+	}
+}
+
+/* ─────────  PHASE 2/3: TERMINAL + KERNEL PANIC (shared base)  ───────── */
+.s7-term {
+	position: absolute;
+	inset: 0;
+	background: #000;
+	color: #d6d6d6;
+	font-family: "Cascadia Code", "Menlo", "Consolas", "Courier New", monospace;
+	font-size: clamp(0.7rem, 2.7vw, 0.95rem);
+	line-height: 1.35;
+	padding: clamp(0.75rem, 3vw, 1.5rem);
+	box-sizing: border-box;
+	overflow: hidden;
+	white-space: pre;
+}
+
+.s7-term--panic {
+	background: #0a0a0a;
+	color: #f0f0c0;
+}
+
+.s7-term__cursor {
+	display: inline-block;
+	width: 0.55em;
+	height: 1em;
+	background: #d6d6d6;
+	vertical-align: -0.15em;
+	margin-left: 0.1em;
+	animation: s7-blink 1s steps(2, end) infinite;
+}
+@keyframes s7-blink {
+	0%,
+	50% {
+		opacity: 1;
+	}
+	51%,
+	100% {
+		opacity: 0;
+	}
+}
+
+.s7-term__green {
+	color: #5af78e;
+}
+.s7-term__red {
+	color: #ff6e6e;
+}
+.s7-term__yellow {
+	color: #ffe066;
+}
+.s7-term__cyan {
+	color: #6ad7e5;
+}
+.s7-term__dim {
+	color: #888;
+}
+
+.s7-term__stream {
+	height: 100%;
+	overflow: hidden;
+}
+.s7-term__stream > div {
+	white-space: pre;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* RGB chromatic aberration on terminal text — the "screen is dying" effect */
+.s7-term--panic {
+	text-shadow:
+		1.5px 0 0 rgba(255, 0, 64, 0.6),
+		-1.5px 0 0 rgba(0, 200, 255, 0.6);
+	animation: s7-shake 0.15s steps(4, end) infinite;
+}
+@keyframes s7-shake {
+	0%,
+	100% {
+		transform: translate(0, 0);
+	}
+	25% {
+		transform: translate(1px, -1px);
+	}
+	50% {
+		transform: translate(-1px, 1px);
+	}
+	75% {
+		transform: translate(1px, 1px);
+	}
+}
+
+/* ─────────  PHASE 4: REVEAL  ───────── */
+.s7-reveal {
+	position: absolute;
+	inset: 0;
+	background: #000;
+	color: #f5f5f5;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: "Cascadia Code", "Menlo", "Consolas", monospace;
+	font-size: clamp(1rem, 4.5vw, 1.6rem);
+	padding: 2rem;
+	box-sizing: border-box;
+	text-align: center;
+	letter-spacing: 0.02em;
+}
+
+.s7-reveal__sig {
+	display: block;
+	margin-top: 1.25rem;
+	font-size: 0.7em;
+	opacity: 0.55;
+	letter-spacing: 0.15em;
+}
