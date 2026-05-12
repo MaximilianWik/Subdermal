@@ -15,7 +15,7 @@
 
 import type { StateKey } from "./src/react-app/states";
 
-export const STATE: StateKey = 6;
+export const STATE: StateKey = 7;
 
 // Only used when STATE = 4. Any absolute URL (https://, mailto:, tel:, etc.)
 export const REDIRECT_URL = "https://example.com";
