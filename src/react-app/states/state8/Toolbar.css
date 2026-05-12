@@ -34,14 +34,18 @@
 }
 
 .tb__tool {
-	flex: 1 1 14%;
-	max-width: 4rem;
-	padding: 0.45rem 0;
+	flex: 1 1 18%;
+	max-width: 4.5rem;
+	padding: 0.4rem 0;
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	background: rgba(255, 255, 255, 0.04);
 	border-radius: 8px;
 	color: #ccc;
 	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.1rem;
 	transition:
 		background-color 0.12s ease,
 		border-color 0.12s ease;
@@ -56,14 +60,25 @@
 	color: #fff;
 }
 .tb__toolIcon {
-	font-size: 1.25rem;
+	font-size: 1.2rem;
 	line-height: 1;
 }
+.tb__toolLabel {
+	font-size: 0.6rem;
+	letter-spacing: 0.05em;
+	color: #aaa;
+	font-weight: 500;
+	text-transform: uppercase;
+}
+.tb__tool--active .tb__toolLabel {
+	color: #fff;
+}
 
+/* ─────────  Sliders  ───────── */
 .tb__swatch {
-	width: 2rem;
-	height: 2rem;
-	border-radius: 6px;
+	width: 2.2rem;
+	height: 2.2rem;
+	border-radius: 7px;
 	border: 2px solid rgba(255, 255, 255, 0.6);
 	cursor: pointer;
 	flex-shrink: 0;
@@ -73,25 +88,50 @@
 	opacity: 0.35;
 }
 
-.tb__slider {
-	flex: 1 1 6rem;
-	min-width: 4rem;
-	accent-color: #60a5fa;
-	height: 1.6rem;
-}
-.tb__slider--narrow {
-	flex: 1 1 4rem;
-	max-width: 6rem;
+.tb__sliderGroup {
+	flex: 1 1 12rem;
+	min-width: 9rem;
+	display: grid;
+	grid-template-columns: 1.1rem auto 1fr 2.6rem;
+	gap: 0.4rem;
+	align-items: center;
+	padding: 0.2rem 0.5rem;
+	background: rgba(255, 255, 255, 0.04);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 8px;
 }
 
-.tb__sizeLabel {
-	font-family: "Cascadia Code", "SF Mono", monospace;
-	font-size: 0.75rem;
+.tb__sliderIcon {
+	font-size: 0.85rem;
+	color: #aaa;
+	text-align: center;
+}
+.tb__sliderLabel {
+	font-size: 0.7rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
 	color: #888;
-	width: 2rem;
-	text-align: right;
+	font-weight: 500;
 }
 
+.tb__slider {
+	min-width: 3.5rem;
+	accent-color: #60a5fa;
+	height: 1.4rem;
+}
+.tb__slider:disabled {
+	opacity: 0.4;
+}
+
+.tb__sliderValue {
+	font-family: "Cascadia Code", "SF Mono", monospace;
+	font-size: 0.78rem;
+	color: #ccc;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ─────────  Action buttons  ───────── */
 .tb__btn {
 	flex: 1 1 auto;
 	padding: 0.55rem 0.6rem;
@@ -126,6 +166,7 @@
 	color: #ff8c8c;
 }
 
+/* ─────────  Color popover  ───────── */
 .tb__colorPop {
 	position: absolute;
 	bottom: 100%;

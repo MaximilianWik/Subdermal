@@ -7,7 +7,11 @@ export type ToolType =
 	| "pencil"
 	| "marker"
 	| "brush"
+	| "charcoal"
+	| "watercolor"
+	| "calligraphy"
 	| "spray"
+	| "airbrush"
 	| "eraser";
 
 /** A single brush gesture. Coordinates are in WORLD space (not screen). */
@@ -73,8 +77,9 @@ export const BRUSH_SIZE_MAX = 80;
 export const ERASER_SIZE_MIN = 4;
 export const ERASER_SIZE_MAX = 80;
 
-// Occupancy grid cell size — coarser = faster but blockier collision
-export const OCCUPANCY_CELL = 32;
+// Occupancy grid cell size — coarser = faster but blockier collision.
+// At 16px cells, a 16384×24576 world is 1024×1536 = 1.57M cells = 196 KB.
+export const OCCUPANCY_CELL = 16;
 export const OCCUPANCY_W = Math.ceil(WORLD_W / OCCUPANCY_CELL);
 export const OCCUPANCY_H = Math.ceil(WORLD_H / OCCUPANCY_CELL);
 

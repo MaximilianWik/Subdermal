@@ -42,7 +42,7 @@ interface Props {
 	existing: FeedDrawing[];
 	draftStrokes: Stroke[];
 	onStrokeAdded: (s: Stroke) => void;
-	onStrokeErased: (idsToRemove: number[]) => void;
+	onDraftReplaced: (next: Stroke[]) => void;
 	onTapDrawing: (drawing: FeedDrawing) => void;
 	canvasRef?: Ref<CanvasViewHandle>;
 }
@@ -56,12 +56,13 @@ export default function CanvasView({
 	existing,
 	draftStrokes,
 	onStrokeAdded,
-	onStrokeErased,
+	onDraftReplaced,
 	onTapDrawing,
 	canvasRef,
 }: Props) {
 	const wrapRef = useRef<HTMLDivElement>(null);
 	const canvasElRef = useRef<HTMLCanvasElement>(null);
+	const eraserCursorRef = useRef<HTMLDivElement>(null);
 
 	// View transform: world (wx, wy) -> screen (sx, sy)
 	//   sx = wx * zoom + view.x
@@ -497,14 +498,37 @@ export default function CanvasView({
 	return (
 		<div
 			ref={wrapRef}
-			className={`cv ${mode === "draw" ? "cv--draw" : "cv--view"}`}
+			className={`cv ${mode === "draw" ? "cv--draw" : "cv--view"} ${
+				mode === "draw" && tool === "eraser" ? "cv--erasing" : ""
+			}`}
 			onPointerDown={handlePointerDown}
-			onPointerMove={handlePointerMove}
+			onPointerMove={(e) => {
+				handlePointerMove(e);
+				// Track eraser cursor when not actively erasing too —
+				// shows the user where they would erase before tapping.
+				if (mode === "draw" && tool === "eraser") {
+					const wrap = wrapRef.current;
+					if (wrap) {
+						const r = wrap.getBoundingClientRect();
+						updateEraserCursor(
+							e.clientX - r.left,
+							e.clientY - r.top,
+							true,
+						);
+					}
+				}
+			}}
 			onPointerUp={handlePointerUp}
 			onPointerCancel={handlePointerUp}
+			onPointerLeave={() => updateEraserCursor(0, 0, false)}
 			onWheel={handleWheel}
 		>
 			<canvas ref={canvasElRef} />
+			<div
+				ref={eraserCursorRef}
+				className="cv__eraserCursor"
+				aria-hidden
+			/>
 		</div>
 	);
 }

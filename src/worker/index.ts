@@ -87,7 +87,11 @@ const VALID_TOOLS: ReadonlyArray<ToolType> = [
 	"pencil",
 	"marker",
 	"brush",
+	"charcoal",
+	"watercolor",
+	"calligraphy",
 	"spray",
+	"airbrush",
 	"eraser",
 ];
 

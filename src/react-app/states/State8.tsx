@@ -176,6 +176,15 @@ export default function State8() {
 		setMode("view");
 	};
 
+	const handleClear = () => {
+		if (draftStrokes.length === 0) return;
+		if (!confirm("Clear all your strokes? This cannot be undone.")) return;
+		// Push current state onto undo so a misclick is still recoverable
+		setHistory((h) => [...h, draftStrokes].slice(-MAX_HISTORY));
+		setFuture([]);
+		setDraftStrokes([]);
+	};
+
 	// ─── Submit ─────────────────────────────────────────────
 	const handleSubmit = async (name: string) => {
 		setSubmitting(true);

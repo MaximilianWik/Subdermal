@@ -25,15 +25,20 @@ interface Props {
 	onSubmit: () => void;
 	onCancel: () => void;
 	onResetView: () => void;
+	onClear: () => void;
 	hasStrokes: boolean;
 }
 
 const TOOLS: Array<{ id: ToolType; label: string; icon: string }> = [
-	{ id: "pen", label: "Pen", icon: "✒︎" },
+	{ id: "pen", label: "Pen", icon: "✒" },
 	{ id: "pencil", label: "Pencil", icon: "✎" },
 	{ id: "marker", label: "Marker", icon: "▮" },
 	{ id: "brush", label: "Brush", icon: "🖌" },
+	{ id: "charcoal", label: "Charcoal", icon: "▰" },
+	{ id: "watercolor", label: "Watercolor", icon: "💧" },
+	{ id: "calligraphy", label: "Calligraphy", icon: "✍" },
 	{ id: "spray", label: "Spray", icon: "✦" },
+	{ id: "airbrush", label: "Airbrush", icon: "◉" },
 	{ id: "eraser", label: "Eraser", icon: "⌫" },
 ];
 
@@ -86,6 +91,7 @@ export default function Toolbar(props: Props) {
 		onSubmit,
 		onCancel,
 		onResetView,
+		onClear,
 		hasStrokes,
 	} = props;
 
@@ -115,6 +121,7 @@ export default function Toolbar(props: Props) {
 						aria-label={t.label}
 					>
 						<span className="tb__toolIcon">{t.icon}</span>
+						<span className="tb__toolLabel">{t.label}</span>
 					</button>
 				))}
 			</div>
@@ -128,28 +135,37 @@ export default function Toolbar(props: Props) {
 					aria-label="Color"
 					disabled={isEraser}
 				/>
-				<input
-					className="tb__slider"
-					type="range"
-					min={sizeMin}
-					max={sizeMax}
-					value={size}
-					onChange={(e) => onSize(parseInt(e.target.value, 10))}
-					title={`Size: ${size}px`}
-				/>
-				<div className="tb__sizeLabel">{size}</div>
-				<input
-					className="tb__slider tb__slider--narrow"
-					type="range"
-					min={5}
-					max={100}
-					value={Math.round(opacity * 100)}
-					onChange={(e) =>
-						onOpacity(parseInt(e.target.value, 10) / 100)
-					}
-					title={`Opacity: ${Math.round(opacity * 100)}%`}
-					disabled={isEraser}
-				/>
+				<div className="tb__sliderGroup">
+					<span className="tb__sliderIcon">●</span>
+					<span className="tb__sliderLabel">Size</span>
+					<input
+						className="tb__slider"
+						type="range"
+						min={sizeMin}
+						max={sizeMax}
+						value={size}
+						onChange={(e) => onSize(parseInt(e.target.value, 10))}
+					/>
+					<span className="tb__sliderValue">{size}</span>
+				</div>
+				<div className="tb__sliderGroup">
+					<span className="tb__sliderIcon">◐</span>
+					<span className="tb__sliderLabel">Opacity</span>
+					<input
+						className="tb__slider"
+						type="range"
+						min={5}
+						max={100}
+						value={Math.round(opacity * 100)}
+						onChange={(e) =>
+							onOpacity(parseInt(e.target.value, 10) / 100)
+						}
+						disabled={isEraser}
+					/>
+					<span className="tb__sliderValue">
+						{Math.round(opacity * 100)}%
+					</span>
+				</div>
 			</div>
 
 			<div className="tb__row tb__row--actions">
@@ -160,7 +176,14 @@ export default function Toolbar(props: Props) {
 					↷ Redo
 				</button>
 				<button className="tb__btn" onClick={onResetView}>
-					⊕ Reset
+					⊕ Reset view
+				</button>
+				<button
+					className="tb__btn tb__btn--danger"
+					onClick={onClear}
+					disabled={!hasStrokes}
+				>
+					🗑 Clear
 				</button>
 				<button className="tb__btn tb__btn--danger" onClick={onCancel}>
 					Cancel
