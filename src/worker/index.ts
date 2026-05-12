@@ -217,6 +217,12 @@ app.get("/api/drawings/:id", async (c) => {
 	return c.json({
 		...row,
 		strokes: safeParseStrokes(row.strokes as string),
+		bbox: {
+			x1: (row.bbox_x1 as number | null) ?? 0,
+			y1: (row.bbox_y1 as number | null) ?? 0,
+			x2: (row.bbox_x2 as number | null) ?? 0,
+			y2: (row.bbox_y2 as number | null) ?? 0,
+		},
 	});
 });
 
