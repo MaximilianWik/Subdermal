@@ -132,10 +132,12 @@ export default function State8() {
 		pushHistory([...draftStrokes, s]);
 	};
 
-	const handleErased = (idxs: number[]) => {
-		const set = new Set(idxs);
-		const next = draftStrokes.filter((_, i) => !set.has(i));
-		pushHistory(next);
+	const handleDraftReplaced = (next: Stroke[]) => {
+		// Eraser path emits a fresh strokes array — push the previous state
+		// onto undo so users can recover from a mis-erase.
+		setHistory((h) => [...h, draftStrokes].slice(-MAX_HISTORY));
+		setFuture([]);
+		setDraftStrokes(next);
 	};
 
 	const handleUndo = () => {
@@ -250,7 +252,7 @@ export default function State8() {
 				existing={existing}
 				draftStrokes={draftStrokes}
 				onStrokeAdded={handleStrokeAdded}
-				onStrokeErased={handleErased}
+				onDraftReplaced={handleDraftReplaced}
 				onTapDrawing={handleTapDrawing}
 			/>
 
@@ -292,6 +294,7 @@ export default function State8() {
 					onSubmit={() => setSignOpen(true)}
 					onCancel={cancelDraft}
 					onResetView={() => canvasHandleRef.current?.resetView()}
+					onClear={handleClear}
 					hasStrokes={hasStrokes}
 				/>
 			)}

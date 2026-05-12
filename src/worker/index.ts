@@ -16,7 +16,17 @@ const WORLD_H = 24576;
 // ─────────────────────────────────────────────────────────────
 //  Types matching the canvas client
 // ─────────────────────────────────────────────────────────────
-type ToolType = "pen" | "pencil" | "marker" | "brush" | "spray" | "eraser";
+type ToolType =
+	| "pen"
+	| "pencil"
+	| "marker"
+	| "brush"
+	| "charcoal"
+	| "watercolor"
+	| "calligraphy"
+	| "spray"
+	| "airbrush"
+	| "eraser";
 interface IncomingStroke {
 	tool: ToolType;
 	color: string;

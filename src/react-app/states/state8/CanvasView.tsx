@@ -458,20 +458,78 @@ export default function CanvasView({
 	};
 
 	// ─── Eraser ─────────────────────────────────────────────
+	//
+	// Partial erase via stroke splitting: walk each draft stroke's points,
+	// drop those falling inside the eraser circle, and emit one or more
+	// sub-strokes for the surviving runs of points. A stroke that crosses
+	// the eraser path becomes two strokes; one entirely inside disappears;
+	// one untouched passes through.
+	//
+	// Eraser only operates on the user's own draft (liveStrokesRef);
+	// committed drawings in `existing` are untouchable.
 	const eraseAt = (wx: number, wy: number) => {
-		const r = size; // eraser size in world px
+		const r = size;
+		const r2 = r * r;
 		const live = liveStrokesRef.current;
-		const removeIdxs: number[] = [];
-		for (let i = 0; i < live.length; i++) {
-			const s = live[i];
-			if (strokeIntersectsCircle(s, wx, wy, r)) removeIdxs.push(i);
+		let mutated = false;
+		const next: Stroke[] = [];
+
+		for (const s of live) {
+			const pts = s.points;
+			let hadHit = false;
+			let cur: number[] = [];
+			const flush = () => {
+				if (cur.length >= 2) next.push({ ...s, points: cur });
+				cur = [];
+			};
+			for (let i = 0; i < pts.length; i += 2) {
+				const dx = pts[i] - wx;
+				const dy = pts[i + 1] - wy;
+				if (dx * dx + dy * dy > r2) {
+					cur.push(pts[i], pts[i + 1]);
+				} else {
+					hadHit = true;
+					flush();
+				}
+			}
+			flush();
+			if (!hadHit) {
+				// Stroke wasn't touched at all — preserve original reference
+				next.pop();
+				next.push(s);
+			} else {
+				mutated = true;
+			}
 		}
-		if (removeIdxs.length === 0) return;
-		const next = live.filter((_, i) => !removeIdxs.includes(i));
+
+		if (!mutated) return;
 		liveStrokesRef.current = next;
-		onStrokeErased(removeIdxs);
+		onDraftReplaced(next);
 		scheduleDraw();
 	};
+
+	// ─── Eraser hover cursor (DOM-mutated, no React re-renders) ─
+	const updateEraserCursor = (sx: number, sy: number, visible: boolean) => {
+		const el = eraserCursorRef.current;
+		if (!el) return;
+		const showing = mode === "draw" && tool === "eraser" && visible;
+		el.style.display = showing ? "block" : "none";
+		if (!showing) return;
+		const v = viewRef.current;
+		const diameter = size * v.zoom * 2;
+		el.style.left = `${sx}px`;
+		el.style.top = `${sy}px`;
+		el.style.width = `${diameter}px`;
+		el.style.height = `${diameter}px`;
+	};
+
+	// Hide the indicator whenever the active tool changes away from eraser
+	useEffect(() => {
+		if (mode !== "draw" || tool !== "eraser") {
+			const el = eraserCursorRef.current;
+			if (el) el.style.display = "none";
+		}
+	}, [mode, tool]);
 
 	// ─── Mouse wheel zoom (desktop) ─────────────────────────
 	const handleWheel = (e: React.WheelEvent) => {
