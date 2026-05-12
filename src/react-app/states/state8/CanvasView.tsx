@@ -3,7 +3,6 @@ import {
 	useEffect,
 	useImperativeHandle,
 	useRef,
-	useState,
 	type Ref,
 } from "react";
 import type { FeedDrawing, Stroke } from "./types";
