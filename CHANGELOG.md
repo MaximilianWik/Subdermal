@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **State 6 — vCard "Save to Contacts" page.** Downloads a vCard 3.0 `.vcf` when the visitor taps the button; works on iOS Safari (native contact preview), Android Chrome, and desktop. Contact fields live in an editable constant at the top of `State6.tsx`. The page only renders name + organization — phone, email, etc. stay private inside the `.vcf` so the page is safe to display in public.
 - State 5 — `jonte.jpg` with romantic stylized header *"CHECK OUT MY HOT BOYFRIEND STROKE STROKE VACUUM VACUUM"*
 - Shared `RomanticPoster` component (header + image with the Cinzel + pink-gradient + glow look) — State 2 and State 5 both render through it
 - **State 4 — redirect state.** Set `STATE = 4` and edit `REDIRECT_URL` in `state.ts` to forward visitors to any URL. Useful for repointing the QR code without reprinting it.

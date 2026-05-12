@@ -8,6 +8,7 @@
 //    3 → cleo.png
 //    4 → redirect to REDIRECT_URL (set below)
 //    5 → jonte.jpg + romantic header
+//    6 → vCard "Save to Contacts" page (edit details in State6.tsx)
 //
 // ─────────────────────────────────────────────────────────────
 

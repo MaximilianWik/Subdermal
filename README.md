@@ -28,6 +28,7 @@ export const STATE: StateKey = 1;  // ← change this
 | `3` | `cleo.png` |
 | `4` | Redirects the page to `REDIRECT_URL` (also set in `state.ts`) |
 | `5` | `jonte.jpg` (with romantic header) |
+| `6` | vCard "Save to Contacts" page — downloads a `.vcf` (edit fields at the top of `State6.tsx`) |
 
 Commit the change. Cloudflare picks it up and redeploys within ~1 minute.
 
