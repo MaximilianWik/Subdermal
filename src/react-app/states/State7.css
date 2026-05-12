@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────────
    State 7 — rm -rf chaos cinematic.
-   Phase machine: terminal → glitch → reveal.
+   Phase machine: terminal → glitch (with image flashing) → reveal.
    100dvh handles iOS Safari's collapsing URL bar correctly.
    ───────────────────────────────────────────────────────────── */
 
@@ -112,37 +112,66 @@
 	text-overflow: ellipsis;
 }
 
-/* ─────────  GLITCH TRANSITION  ───────── */
+/* ─────────  GLITCH (image flashing)  ───────── */
 .s7-glitch {
 	position: absolute;
 	inset: 0;
 	background: #000;
-	animation: s7-glitch 0.5s steps(8, end);
+	overflow: hidden;
+	z-index: 1;
 }
-@keyframes s7-glitch {
-	0% {
-		background: #fff;
-		filter: invert(1);
-	}
-	20% {
-		background: #0078d4;
-		transform: translate(-4px, 2px);
-	}
-	40% {
-		background: #ff0040;
-		transform: translate(6px, -3px);
-	}
-	60% {
-		background: #00ff66;
-		transform: translate(-2px, 4px);
-	}
-	80% {
-		background: #000;
-		filter: hue-rotate(120deg);
-	}
-	100% {
-		background: #000;
-	}
+
+.s7-glitch__img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	will-change: transform, filter;
+}
+
+/* Image variants — different filter + transform per frame number.
+   Each frame shows a different image AND a different visual treatment,
+   so the result feels chaotic rather than rhythmic. */
+.s7-glitch--v0 .s7-glitch__img {
+	filter: hue-rotate(90deg) contrast(1.6) saturate(1.4);
+	transform: translate(-4px, 2px) scale(1.02);
+}
+.s7-glitch--v1 .s7-glitch__img {
+	filter: invert(1) saturate(2);
+	transform: translate(6px, -3px) skewX(2deg);
+}
+.s7-glitch--v2 .s7-glitch__img {
+	filter: hue-rotate(220deg) contrast(0.7) brightness(1.3);
+	transform: translate(-3px, 4px) scale(1.04);
+}
+.s7-glitch--v3 .s7-glitch__img {
+	filter: contrast(2.4) brightness(1.4) saturate(0.4);
+	transform: translate(4px, -2px) scale(1.05) skewY(-1.5deg);
+}
+.s7-glitch--v4 .s7-glitch__img {
+	filter: hue-rotate(340deg) contrast(1.3) blur(0.5px);
+	transform: translate(-5px, -3px) scale(1.03);
+}
+
+/* Pure-color flash frames — break up the image cadence so the
+   glitch doesn't feel like a slideshow. */
+.s7-glitch--c0 {
+	background: #fff;
+}
+.s7-glitch--c1 {
+	background: #ff0040;
+}
+.s7-glitch--c2 {
+	background: #00ff66;
+}
+.s7-glitch--c3 {
+	background: #0078d4;
+}
+.s7-glitch--c4 {
+	background: #000;
+	filter: invert(1);
 }
 
 /* ─────────  REVEAL  ───────── */

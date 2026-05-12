@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./State7.css";
 
 // ─────────────────────────────────────────────────────────────
 //  State 7 — `rm -rf /` chaos cinematic.
 //
-//  Phase timeline (auto-advances; total ~7s before settling on
-//  the reveal):
+//  Phase timeline (auto-advances; total ~7.6s before reveal):
 //    0.0s  terminal  Black screen, types `sudo rm -rf / --no-preserve-root`
 //                    one char at a time, then floods deletion output
-//    6.2s  glitch    500ms RGB tear / inversion / hue-shift
-//    6.7s  reveal    Black screen, types "...just kidding."
+//    6.2s  glitch    1.4s of rapid-fire image flashes from /public/glitch
+//                    with randomized color filters and transforms
+//    7.6s  reveal    Black screen, types "...just kidding."
 // ─────────────────────────────────────────────────────────────
 
 type Phase = "terminal" | "glitch" | "reveal";
@@ -17,11 +17,40 @@ type Phase = "terminal" | "glitch" | "reveal";
 const TIMELINE: Array<{ phase: Phase; at: number }> = [
 	{ phase: "terminal", at: 0 },
 	{ phase: "glitch", at: 6200 },
-	{ phase: "reveal", at: 6700 },
+	{ phase: "reveal", at: 7600 },
+];
+
+// All 14 images in /public/glitch, in filename order.
+// They get shuffled per scan so each viewer sees a different sequence.
+const GLITCH_IMAGES = [
+	"/glitch/glitch01.jpg",
+	"/glitch/glitch02.jpg",
+	"/glitch/glitch03.jpg",
+	"/glitch/glitch04.jpg",
+	"/glitch/glitch05.jpg",
+	"/glitch/glitch06.jpg",
+	"/glitch/glitch07.jpg",
+	"/glitch/glitch08.jpg",
+	"/glitch/glitch09.jpg",
+	"/glitch/glitch10.jpg",
+	"/glitch/glitch11.png",
+	"/glitch/glitch12.png",
+	"/glitch/glitch13.jpg",
+	"/glitch/glitch14.jpg",
 ];
 
 export default function State7() {
 	const [phase, setPhase] = useState<Phase>("terminal");
+
+	// Preload glitch images on mount so they're already in cache when
+	// the glitch phase fires at 6.2s — otherwise the first few frames
+	// would just be blank while the network fetches.
+	useEffect(() => {
+		for (const src of GLITCH_IMAGES) {
+			const img = new Image();
+			img.src = src;
+		}
+	}, []);
 
 	useEffect(() => {
 		const timers = TIMELINE.slice(1).map(({ phase: p, at }) =>
@@ -33,7 +62,7 @@ export default function State7() {
 	return (
 		<div className="s7">
 			{phase === "terminal" && <Terminal />}
-			{phase === "glitch" && <div className="s7-glitch" />}
+			{phase === "glitch" && <GlitchScreen />}
 			{phase === "reveal" && <Reveal />}
 		</div>
 	);
@@ -153,7 +182,6 @@ function Terminal() {
 		[],
 	);
 
-	// Typewriter for the command
 	useEffect(() => {
 		let i = 0;
 		const id = setInterval(() => {
@@ -164,7 +192,6 @@ function Terminal() {
 		return () => clearInterval(id);
 	}, []);
 
-	// Once typed, flood deletion lines
 	useEffect(() => {
 		if (typed !== RM_CMD) return;
 		const id = setInterval(() => {
@@ -196,6 +223,41 @@ function Terminal() {
 					))}
 				</div>
 			)}
+		</div>
+	);
+}
+
+// ─── Glitch: rapid image flashing with chaotic filters ───────
+
+function GlitchScreen() {
+	const [frame, setFrame] = useState(0);
+
+	// Shuffle the image list once per scan so each viewer sees a
+	// different sequence. Fisher-Yates would be cleaner but for 14
+	// items a random sort is fine and dependency-free.
+	const order = useRef<string[]>([]);
+	if (order.current.length === 0) {
+		order.current = [...GLITCH_IMAGES].sort(() => Math.random() - 0.5);
+	}
+
+	useEffect(() => {
+		// New frame every ~75ms → ~18 frames over the 1.4s glitch phase.
+		// Faster than human flicker fusion threshold so it feels seizure-y;
+		// slow enough that individual images still register subliminally.
+		const id = setInterval(() => setFrame((f) => f + 1), 75);
+		return () => clearInterval(id);
+	}, []);
+
+	const isColorFlash = frame % 6 === 5; // pure-color frame every 6th
+	const variant = frame % 5;
+	const img = order.current[frame % order.current.length];
+
+	if (isColorFlash) {
+		return <div className={`s7-glitch s7-glitch--c${variant}`} />;
+	}
+	return (
+		<div className={`s7-glitch s7-glitch--v${variant}`}>
+			<img className="s7-glitch__img" src={img} alt="" />
 		</div>
 	);
 }
