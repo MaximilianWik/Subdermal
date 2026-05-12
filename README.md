@@ -29,7 +29,7 @@ export const STATE: StateKey = 1;  // ← change this
 | `4` | Redirects the page to `REDIRECT_URL` (also set in `state.ts`) |
 | `5` | `jonte.jpg` (with romantic header) |
 | `6` | vCard "Save to Contacts" page — downloads a `.vcf` (edit fields at the top of `State6.tsx`) |
-| `7` | BSOD / kernel-panic / `rm -rf /` chaos cinematic — fake-crashes the visitor's browser for ~12s, then reveals the prank |
+| `7` | `rm -rf /` chaos cinematic — typewritten `sudo rm -rf / --no-preserve-root` followed by a flood of deletion output, glitch transition, then a "…just kidding." reveal |
 
 Commit the change. Cloudflare picks it up and redeploys within ~1 minute.
 
