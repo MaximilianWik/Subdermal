@@ -5,6 +5,7 @@ import CanvasView from "./state8/CanvasView";
 import Toolbar from "./state8/Toolbar";
 import SignModal from "./state8/SignModal";
 import Detail from "./state8/Detail";
+import BanList from "./state8/BanList";
 import {
 	fetchFeed,
 	fetchOne,
@@ -71,6 +72,7 @@ export default function State8() {
 	const [submitError, setSubmitError] = useState<string | null>(null);
 	const [detail, setDetail] = useState<FullDrawing | null>(null);
 	const [detailLoading, setDetailLoading] = useState(false);
+	const [bansOpen, setBansOpen] = useState(false);
 
 	const canvasHandleRef = useRef<CanvasViewHandle>(null);
 
@@ -267,13 +269,24 @@ export default function State8() {
 					</div>
 				</div>
 				{mode === "view" && (
-					<button
-						className="s8__drawFab"
-						onClick={enterDraw}
-						aria-label="Draw"
-					>
-						✏︎ Draw
-					</button>
+					<div className="s8__topbarRight">
+						{admin && (
+							<button
+								className="s8__bansFab"
+								onClick={() => setBansOpen(true)}
+								aria-label="Banned IPs"
+							>
+								⛔ Bans
+							</button>
+						)}
+						<button
+							className="s8__drawFab"
+							onClick={enterDraw}
+							aria-label="Draw"
+						>
+							✏︎ Draw
+						</button>
+					</div>
 				)}
 			</div>
 
@@ -321,6 +334,8 @@ export default function State8() {
 					onHidden={removeFromCanvas}
 				/>
 			)}
+
+			{bansOpen && <BanList onClose={() => setBansOpen(false)} />}
 
 			{detailLoading && (
 				<div className="s8__loadingPill">opening drawing…</div>

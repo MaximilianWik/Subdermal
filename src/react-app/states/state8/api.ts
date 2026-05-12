@@ -82,3 +82,25 @@ export async function adminBan(ip: string, reason: string): Promise<void> {
 	});
 	if (!r.ok) throw new Error(`ban ${r.status}`);
 }
+
+export interface BanRow {
+	ip: string;
+	reason: string | null;
+	banned_at: number;
+}
+
+export async function fetchBans(): Promise<BanRow[]> {
+	const r = await fetch(`/api/admin/bans${adminQs()}`);
+	if (!r.ok) throw new Error(`bans ${r.status}`);
+	const j = (await r.json()) as { bans: BanRow[] };
+	return j.bans;
+}
+
+export async function adminUnban(ip: string): Promise<void> {
+	const r = await fetch(`/api/admin/unban${adminQs()}`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ ip }),
+	});
+	if (!r.ok) throw new Error(`unban ${r.status}`);
+}

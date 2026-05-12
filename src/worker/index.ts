@@ -414,4 +414,13 @@ app.post("/api/admin/unban", async (c) => {
 	return c.json({ ok: true });
 });
 
+// GET /api/admin/bans — list banned IPs, newest first.
+app.get("/api/admin/bans", async (c) => {
+	if (!checkAdmin(c, c.env)) return c.json({ error: "forbidden" }, 403);
+	const res = await c.env.DB.prepare(
+		`SELECT ip, reason, banned_at FROM banned_ips ORDER BY banned_at DESC LIMIT 500`,
+	).all<{ ip: string; reason: string | null; banned_at: number }>();
+	return c.json({ bans: res.results ?? [] });
+});
+
 export default app;
