@@ -4,7 +4,10 @@ interface Props {
 	onAccept: () => void;
 }
 
+type RuleTone = "ban" | "ok";
+
 interface Rule {
+	tone: RuleTone;
 	icon: string;
 	title: string;
 	body: string;
@@ -12,24 +15,28 @@ interface Rule {
 
 const RULES: Rule[] = [
 	{
+		tone: "ban",
 		icon: "✕",
 		title: "No hate speech",
-		body: "Slurs, harassment, or content targeting any group will be removed without warning.",
+		body: "Slurs, harassment, or anything aimed at a group will be removed without warning. Don't be that person.",
 	},
 	{
+		tone: "ok",
+		icon: "✓",
+		title: "Profanity and NSFW jokes are encouraged",
+		body: "This is a QR tattoo on some guy's arm. The bar was on the floor before you got here. Be rude, be cursed, be funny. Just stay on the right side of actually illegal.",
+	},
+	{
+		tone: "ban",
 		icon: "✕",
-		title: "No profanity or NSFW",
-		body: "Keep it work- and family-safe. No nudity, gore, or explicit imagery.",
+		title: "No griefing other artists",
+		body: "Drawing on top of someone else's piece is forbidden, and physically impossible: the proximity rule blocks your strokes from crossing anyone's existing work. Try it if you want. It won't work. Save your battery.",
 	},
 	{
-		icon: "✕",
-		title: "No griefing",
-		body: "Don't deface, scribble over, or sabotage other people's drawings on purpose.",
-	},
-	{
+		tone: "ban",
 		icon: "✕",
 		title: "No spam or impersonation",
-		body: "One artist, one signature. Don't pose as someone else.",
+		body: "One artist, one signature. Don't pose as someone you aren't.",
 	},
 ];
 
@@ -41,15 +48,23 @@ export default function Rules({ onAccept }: Props) {
 					<div className="rules__eyebrow">Before you draw</div>
 					<div className="rules__title">House rules</div>
 					<div className="rules__sub">
-						This is a shared canvas — every drawing here lives forever
-						alongside everyone else's. Read this once, then have fun.
+						You found this canvas by scanning a QR code tattooed on
+						a real human arm. Every drawing you make here lives
+						there too, permanently inked next to everyone else's,
+						for as long as the skin holds. Treat it accordingly.
 					</div>
 				</div>
 
 				<ul className="rules__list">
 					{RULES.map((r) => (
-						<li className="rules__row" key={r.title}>
-							<span className="rules__icon" aria-hidden>
+						<li
+							className={`rules__row rules__row--${r.tone}`}
+							key={r.title}
+						>
+							<span
+								className={`rules__icon rules__icon--${r.tone}`}
+								aria-hidden
+							>
 								{r.icon}
 							</span>
 							<div className="rules__rowBody">
@@ -82,7 +97,7 @@ export default function Rules({ onAccept }: Props) {
 					onClick={onAccept}
 					autoFocus
 				>
-					I understand — let me draw
+					I understand. Let me draw.
 				</button>
 			</div>
 		</div>
