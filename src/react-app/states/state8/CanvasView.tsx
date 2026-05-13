@@ -272,12 +272,22 @@ export default function CanvasView({
 					pts[0].y - pts[1].y,
 				),
 			};
-			// Cancel any in-progress single-finger work
+			// Cancel any in-progress single-finger work. Crucially, also
+			// remove the orphan stroke that was pushed onto liveStrokesRef
+			// when the first finger touched down — otherwise the user sees
+			// a phantom dot/line every time they pinch-zoom mid-draw.
+			const orphan = currentStrokeRef.current;
+			if (orphan) {
+				liveStrokesRef.current = liveStrokesRef.current.filter(
+					(s) => s !== orphan,
+				);
+			}
 			currentStrokeRef.current = null;
 			tapRef.current = null;
 			dropperHexRef.current = null;
 			const dEl = dropperCursorRef.current;
 			if (dEl) dEl.style.display = "none";
+			scheduleDraw();
 			return;
 		}
 
