@@ -30,7 +30,7 @@ const RULES: Rule[] = [
 		tone: "ban",
 		icon: "✕",
 		title: "No griefing other artists",
-		body: "Drawing on top of someone else's piece is forbidden, and physically impossible: the proximity rule blocks your strokes from crossing anyone's existing work. Try it if you want. It won't work. Save your battery.",
+		body: "Griefing other people's pieces is forbidden. Try it if you want. It won't work. Save your battery.",
 	},
 	{
 		tone: "ban",
