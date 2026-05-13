@@ -62,6 +62,10 @@ export function drawStroke(
 		case "pixel":
 			renderPixel(ctx, stroke, limit);
 			break;
+		case "eyedropper":
+			// Eyedropper never produces strokes — sampling happens
+			// inline in CanvasView's pointer handler.
+			break;
 		case "eraser":
 			// Never rendered — eraser strokes mutate the user's draft array
 			// directly via stroke splitting; nothing to draw on canvas.

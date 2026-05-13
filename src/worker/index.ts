@@ -27,6 +27,7 @@ type ToolType =
 	| "spray"
 	| "airbrush"
 	| "pixel"
+	| "eyedropper"
 	| "eraser";
 interface IncomingStroke {
 	tool: ToolType;
@@ -131,6 +132,7 @@ const VALID_TOOLS: ReadonlyArray<ToolType> = [
 	"spray",
 	"airbrush",
 	"pixel",
+	"eyedropper",
 	"eraser",
 ];
 

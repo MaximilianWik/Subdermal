@@ -45,6 +45,7 @@ interface Props {
 	onStrokeAdded: (s: Stroke) => void;
 	onDraftReplaced: (next: Stroke[]) => void;
 	onTapDrawing: (drawing: FeedDrawing) => void;
+	onColorPicked?: (hex: string) => void;
 	canvasRef?: Ref<CanvasViewHandle>;
 }
 
@@ -59,11 +60,13 @@ export default function CanvasView({
 	onStrokeAdded,
 	onDraftReplaced,
 	onTapDrawing,
+	onColorPicked,
 	canvasRef,
 }: Props) {
 	const wrapRef = useRef<HTMLDivElement>(null);
 	const canvasElRef = useRef<HTMLCanvasElement>(null);
 	const eraserCursorRef = useRef<HTMLDivElement>(null);
+	const dropperCursorRef = useRef<HTMLDivElement>(null);
 
 	// View transform: world (wx, wy) -> screen (sx, sy)
 	//   sx = wx * zoom + view.x
@@ -272,6 +275,9 @@ export default function CanvasView({
 			// Cancel any in-progress single-finger work
 			currentStrokeRef.current = null;
 			tapRef.current = null;
+			dropperHexRef.current = null;
+			const dEl = dropperCursorRef.current;
+			if (dEl) dEl.style.display = "none";
 			return;
 		}
 
@@ -288,6 +294,12 @@ export default function CanvasView({
 			if (tool === "eraser") {
 				// Eraser at this point — find any draft strokes within radius and remove
 				eraseAt(wx, wy);
+				return;
+			}
+			if (tool === "eyedropper") {
+				// Sample but don't commit yet — commit happens on pointer up
+				// so users can drag to fine-tune the pick before lifting.
+				updateDropperCursor(sx, sy, true);
 				return;
 			}
 			if (tool === "pixel") {
@@ -398,6 +410,10 @@ export default function CanvasView({
 				eraseAt(wx, wy);
 				return;
 			}
+			if (tool === "eyedropper") {
+				updateDropperCursor(sx, sy, true);
+				return;
+			}
 			const cur = currentStrokeRef.current;
 			if (!cur) return;
 
@@ -487,6 +503,16 @@ export default function CanvasView({
 		const tap = tapRef.current;
 		tapRef.current = null;
 
+		// Commit the eyedropper pick on lift
+		if (mode === "draw" && tool === "eyedropper") {
+			const hex = dropperHexRef.current;
+			dropperHexRef.current = null;
+			const el = dropperCursorRef.current;
+			if (el) el.style.display = "none";
+			if (hex && onColorPicked) onColorPicked(hex);
+			return;
+		}
+
 		// Commit the in-progress stroke
 		if (mode === "draw" && currentStrokeRef.current) {
 			const s = currentStrokeRef.current;
@@ -574,6 +600,74 @@ export default function CanvasView({
 		scheduleDraw();
 	};
 
+	// ─── Eyedropper ─────────────────────────────────────────
+	//
+	// Samples a single pixel under the cursor in canvas-backing-store
+	// coords (independent of the current pan/zoom transform), and
+	// returns it as #RRGGBB. Returns null if the point is outside the
+	// canvas or the pixel is fully transparent.
+	const dropperHexRef = useRef<string | null>(null);
+
+	const samplePixelHex = (sx: number, sy: number): string | null => {
+		const canvas = canvasElRef.current;
+		if (!canvas) return null;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return null;
+		const dpr = window.devicePixelRatio || 1;
+		const px = Math.floor(sx * dpr);
+		const py = Math.floor(sy * dpr);
+		if (px < 0 || py < 0 || px >= canvas.width || py >= canvas.height) {
+			return null;
+		}
+		try {
+			const data = ctx.getImageData(px, py, 1, 1).data;
+			const r = data[0];
+			const g = data[1];
+			const b = data[2];
+			const a = data[3];
+			if (a === 0) return null;
+			return (
+				"#" +
+				((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")
+			);
+		} catch {
+			return null;
+		}
+	};
+
+	const updateDropperCursor = (
+		sx: number,
+		sy: number,
+		visible: boolean,
+	) => {
+		const el = dropperCursorRef.current;
+		if (!el) return;
+		const showing = mode === "draw" && tool === "eyedropper" && visible;
+		if (!showing) {
+			el.style.display = "none";
+			return;
+		}
+		const hex = samplePixelHex(sx, sy);
+		if (!hex) {
+			el.style.display = "none";
+			return;
+		}
+		dropperHexRef.current = hex;
+		el.style.display = "block";
+		el.style.left = sx + "px";
+		el.style.top = sy + "px";
+		el.style.setProperty("--c", hex);
+	};
+
+	// Hide preview whenever the active tool changes away from eyedropper
+	useEffect(() => {
+		if (mode !== "draw" || tool !== "eyedropper") {
+			const el = dropperCursorRef.current;
+			if (el) el.style.display = "none";
+			dropperHexRef.current = null;
+		}
+	}, [mode, tool]);
+
 	// ─── Eraser hover cursor (DOM-mutated, no React re-renders) ─
 	const updateEraserCursor = (sx: number, sy: number, visible: boolean) => {
 		const el = eraserCursorRef.current;
@@ -628,29 +722,39 @@ export default function CanvasView({
 			onPointerDown={handlePointerDown}
 			onPointerMove={(e) => {
 				handlePointerMove(e);
+				const wrap = wrapRef.current;
+				if (!wrap) return;
+				const r = wrap.getBoundingClientRect();
+				const sx = e.clientX - r.left;
+				const sy = e.clientY - r.top;
 				// Track eraser cursor when not actively erasing too —
 				// shows the user where they would erase before tapping.
 				if (mode === "draw" && tool === "eraser") {
-					const wrap = wrapRef.current;
-					if (wrap) {
-						const r = wrap.getBoundingClientRect();
-						updateEraserCursor(
-							e.clientX - r.left,
-							e.clientY - r.top,
-							true,
-						);
-					}
+					updateEraserCursor(sx, sy, true);
+				}
+				// Show eyedropper hover preview before commit too.
+				if (mode === "draw" && tool === "eyedropper") {
+					updateDropperCursor(sx, sy, true);
 				}
 			}}
 			onPointerUp={handlePointerUp}
 			onPointerCancel={handlePointerUp}
-			onPointerLeave={() => updateEraserCursor(0, 0, false)}
+			onPointerLeave={() => {
+				updateEraserCursor(0, 0, false);
+				const dEl = dropperCursorRef.current;
+				if (dEl) dEl.style.display = "none";
+			}}
 			onWheel={handleWheel}
 		>
 			<canvas ref={canvasElRef} />
 			<div
 				ref={eraserCursorRef}
 				className="cv__eraserCursor"
+				aria-hidden
+			/>
+			<div
+				ref={dropperCursorRef}
+				className="cv__dropperCursor"
 				aria-hidden
 			/>
 		</div>

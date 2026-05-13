@@ -108,6 +108,15 @@ function PixelArtIcon() {
 		</svg>
 	);
 }
+function EyedropperIcon() {
+	return (
+		<svg {...SVG_PROPS}>
+			<path d="M14 4l6 6" />
+			<path d="M17.5 3.5a2.121 2.121 0 0 1 3 3L11 16l-4 1 1-4 9.5-9.5z" />
+			<path d="M11 16l-4 4H4v-3l4-4" />
+		</svg>
+	);
+}
 function EraserIcon() {
 	return (
 		<svg {...SVG_PROPS}>
@@ -125,6 +134,7 @@ const TOOLS: Array<{ id: ToolType; label: string; icon: ReactNode }> = [
 	{ id: "spray", label: "Spray", icon: <SprayIcon /> },
 	{ id: "airbrush", label: "Airbrush", icon: <AirbrushIcon /> },
 	{ id: "pixel", label: "Pixel art", icon: <PixelArtIcon /> },
+	{ id: "eyedropper", label: "Pick color", icon: <EyedropperIcon /> },
 	{ id: "eraser", label: "Eraser", icon: <EraserIcon /> },
 ];
 
@@ -186,6 +196,7 @@ export default function Toolbar(props: Props) {
 
 	const isEraser = tool === "eraser";
 	const isPixel = tool === "pixel";
+	const isEyedropper = tool === "eyedropper";
 	const sizeMin = isEraser ? ERASER_SIZE_MIN : BRUSH_SIZE_MIN;
 	const sizeMax = isEraser ? ERASER_SIZE_MAX : BRUSH_SIZE_MAX;
 
@@ -220,7 +231,7 @@ export default function Toolbar(props: Props) {
 					onClick={() => setColorOpen((v) => !v)}
 					title="Color"
 					aria-label="Color"
-					disabled={isEraser}
+					disabled={isEraser || isEyedropper}
 				/>
 				<div className="tb__sliderGroup">
 					<span className="tb__sliderIcon">●</span>
@@ -232,7 +243,7 @@ export default function Toolbar(props: Props) {
 						max={sizeMax}
 						value={size}
 						onChange={(e) => onSize(parseInt(e.target.value, 10))}
-						disabled={isPixel}
+						disabled={isPixel || isEyedropper}
 					/>
 					<span className="tb__sliderValue">{isPixel ? 32 : size}</span>
 				</div>
@@ -248,7 +259,7 @@ export default function Toolbar(props: Props) {
 						onChange={(e) =>
 							onOpacity(parseInt(e.target.value, 10) / 100)
 						}
-						disabled={isEraser || isPixel}
+						disabled={isEraser || isPixel || isEyedropper}
 					/>
 					<span className="tb__sliderValue">
 						{Math.round(opacity * 100)}%

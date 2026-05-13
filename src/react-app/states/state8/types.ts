@@ -13,6 +13,7 @@ export type ToolType =
 	| "spray"
 	| "airbrush"
 	| "pixel"
+	| "eyedropper"
 	| "eraser";
 
 /** A single brush gesture. Coordinates are in WORLD space (not screen). */

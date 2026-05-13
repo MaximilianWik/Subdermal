@@ -62,6 +62,23 @@ export default function State8() {
 	const [draftStrokes, setDraftStrokes] = useState<Stroke[]>([]);
 	const [tool, setTool] = useState<ToolType>("pen");
 	const [color, setColor] = useState<string>("#000000");
+	// Tracks the brush the user was on before activating the eyedropper,
+	// so we can auto-revert after one pick (Photoshop-style).
+	const prevToolRef = useRef<ToolType>("pen");
+
+	const handleSetTool = (next: ToolType) => {
+		if (next === "eyedropper" && tool !== "eyedropper") {
+			prevToolRef.current = tool;
+		}
+		setTool(next);
+	};
+
+	const handleColorPicked = (hex: string) => {
+		setColor(hex);
+		// Auto-revert to the previous brush so the user can keep drawing
+		const prev = prevToolRef.current;
+		setTool(prev === "eyedropper" ? "pen" : prev);
+	};
 	const [size, setSize] = useState<number>(6);
 	const [opacity, setOpacity] = useState<number>(1);
 	const [draftName, setDraftName] = useState<string>("");
@@ -335,6 +352,7 @@ export default function State8() {
 				onStrokeAdded={handleStrokeAdded}
 				onDraftReplaced={handleDraftReplaced}
 				onTapDrawing={handleTapDrawing}
+				onColorPicked={handleColorPicked}
 			/>
 
 			{/* Top-bar info / mode toggle */}
@@ -409,7 +427,7 @@ export default function State8() {
 					opacity={opacity}
 					canUndo={history.length > 0}
 					canRedo={future.length > 0}
-					onTool={setTool}
+					onTool={handleSetTool}
 					onColor={setColor}
 					onSize={setSize}
 					onOpacity={setOpacity}
