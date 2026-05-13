@@ -63,6 +63,7 @@ export default function State8() {
 	const [size, setSize] = useState<number>(6);
 	const [opacity, setOpacity] = useState<number>(1);
 	const [draftName, setDraftName] = useState<string>("");
+	const [draftInstagram, setDraftInstagram] = useState<string>("");
 	const drawStartedAtRef = useRef<number>(0);
 
 	// Undo / redo stacks
@@ -95,6 +96,7 @@ export default function State8() {
 			setSize(d.size);
 			setOpacity(d.opacity);
 			setDraftName(d.name);
+			setDraftInstagram(d.instagram);
 			drawStartedAtRef.current = d.startedAt;
 		} else {
 			drawStartedAtRef.current = Date.now();
@@ -113,7 +115,8 @@ export default function State8() {
 
 	// ─── Persist draft on every change ──────────────────────
 	useEffect(() => {
-		if (draftStrokes.length === 0 && draftName === "") return;
+		if (draftStrokes.length === 0 && draftName === "" && draftInstagram === "")
+			return;
 		const d: Draft = {
 			strokes: draftStrokes,
 			tool,
@@ -121,10 +124,11 @@ export default function State8() {
 			size,
 			opacity,
 			name: draftName,
+			instagram: draftInstagram,
 			startedAt: drawStartedAtRef.current || Date.now(),
 		};
 		saveDraft(d);
-	}, [draftStrokes, tool, color, size, opacity, draftName]);
+	}, [draftStrokes, tool, color, size, opacity, draftName, draftInstagram]);
 
 	// ─── Add / undo / redo / erase ──────────────────────────
 	const pushHistory = (next: Stroke[]) => {
@@ -197,6 +201,7 @@ export default function State8() {
 		setHistory([]);
 		setFuture([]);
 		setDraftName("");
+		setDraftInstagram("");
 		drawStartedAtRef.current = Date.now();
 		clearDraft();
 		setMode("view");
@@ -212,7 +217,7 @@ export default function State8() {
 	};
 
 	// ─── Submit ─────────────────────────────────────────────
-	const handleSubmit = async (name: string) => {
+	const handleSubmit = async (name: string, instagram: string | null) => {
 		setSubmitting(true);
 		setSubmitError(null);
 		try {
@@ -220,6 +225,7 @@ export default function State8() {
 				await updateDrawing(editingId, {
 					name,
 					strokes: draftStrokes,
+					instagram_handle: instagram,
 				});
 			} else {
 				const res = await submitDrawing({
@@ -232,6 +238,7 @@ export default function State8() {
 						0,
 						Date.now() - (drawStartedAtRef.current || Date.now()),
 					),
+					instagram_handle: instagram,
 				});
 				rememberMyDrawing(res.id);
 			}
@@ -242,6 +249,7 @@ export default function State8() {
 			setHistory([]);
 			setFuture([]);
 			setDraftName("");
+			setDraftInstagram("");
 			drawStartedAtRef.current = Date.now();
 			clearDraft();
 			setSignOpen(false);
@@ -274,6 +282,7 @@ export default function State8() {
 		setEditingId(target.id);
 		setDraftStrokes([...fromFeed.strokes]);
 		setDraftName(fromFeed.name ?? "");
+		setDraftInstagram(fromFeed.instagram_handle ?? "");
 		setHistory([]);
 		setFuture([]);
 		drawStartedAtRef.current = Date.now();
@@ -384,15 +393,17 @@ export default function State8() {
 			{signOpen && (
 				<SignModal
 					defaultName={draftName}
+					defaultInstagram={draftInstagram}
 					pending={submitting}
 					error={submitError}
 					editing={editingId !== null}
 					onCancel={() => {
 						if (!submitting) setSignOpen(false);
 					}}
-					onSubmit={(name) => {
+					onSubmit={(name, instagram) => {
 						setDraftName(name);
-						void handleSubmit(name);
+						setDraftInstagram(instagram ?? "");
+						void handleSubmit(name, instagram);
 					}}
 				/>
 			)}

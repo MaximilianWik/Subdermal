@@ -43,12 +43,14 @@ interface IncomingDrawing {
 	device_pixel_ratio?: number;
 	draw_time_ms?: number;
 	owner_secret?: string;
+	instagram_handle?: string;
 }
 
 interface IncomingPatch {
 	name?: string;
 	strokes?: IncomingStroke[];
 	owner_secret?: string;
+	instagram_handle?: string;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -103,6 +105,19 @@ function safeParseStrokes(s: string): unknown[] {
 	} catch {
 		return [];
 	}
+}
+
+// Same rules as the client's sanitizeInstagram — defence in depth.
+const IG_HANDLE_RE = /^(?!\.)(?!.*\.\.)[A-Za-z0-9._]{1,30}(?<!\.)$/;
+function sanitizeIgHandle(input: unknown): string | null {
+	if (typeof input !== "string") return null;
+	let s = input.trim();
+	if (!s) return null;
+	s = s.replace(/^(?:https?:\/\/)?(?:www\.)?instagram\.com\//i, "");
+	s = s.replace(/[/?#].*$/, "");
+	if (s.startsWith("@")) s = s.slice(1);
+	if (!IG_HANDLE_RE.test(s)) return null;
+	return s;
 }
 
 const VALID_TOOLS: ReadonlyArray<ToolType> = [
@@ -162,14 +177,16 @@ app.get("/api/drawings", async (c) => {
 	const stmt = Number.isFinite(cursor)
 		? c.env.DB.prepare(
 				`SELECT id, created_at, name, strokes, country, city, region,
-				        likes, bbox_x1, bbox_y1, bbox_x2, bbox_y2
+				        likes, bbox_x1, bbox_y1, bbox_x2, bbox_y2,
+				        instagram_handle
 				   FROM drawings
 				  WHERE hidden = 0 AND id < ?
 				  ORDER BY id DESC LIMIT ?`,
 			).bind(cursor, limit)
 		: c.env.DB.prepare(
 				`SELECT id, created_at, name, strokes, country, city, region,
-				        likes, bbox_x1, bbox_y1, bbox_x2, bbox_y2
+				        likes, bbox_x1, bbox_y1, bbox_x2, bbox_y2,
+				        instagram_handle
 				   FROM drawings
 				  WHERE hidden = 0
 				  ORDER BY id DESC LIMIT ?`,
@@ -189,6 +206,7 @@ app.get("/api/drawings", async (c) => {
 			bbox_y1: number | null;
 			bbox_x2: number | null;
 			bbox_y2: number | null;
+			instagram_handle: string | null;
 		}>(),
 		c.env.DB.prepare(
 			"SELECT COUNT(*) AS n FROM drawings WHERE hidden = 0",
@@ -210,6 +228,7 @@ app.get("/api/drawings", async (c) => {
 			y2: r.bbox_y2 ?? 0,
 		},
 		strokes: safeParseStrokes(r.strokes),
+		instagram_handle: r.instagram_handle,
 	}));
 
 	const next_cursor =
@@ -290,6 +309,8 @@ app.post("/api/drawings", async (c) => {
 			: null;
 	if (!ownerSecret) return c.json({ error: "owner_secret required" }, 400);
 
+	const igHandle = sanitizeIgHandle(body.instagram_handle);
+
 	const cf = c.req.raw.cf as
 		| {
 				country?: string;
@@ -311,8 +332,8 @@ app.post("/api/drawings", async (c) => {
 			viewport_w, viewport_h, device_pixel_ratio,
 			draw_time_ms, canvas_width, canvas_height,
 			bbox_x1, bbox_y1, bbox_x2, bbox_y2,
-			owner_secret
-		 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			owner_secret, instagram_handle
+		 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 	)
 		.bind(
 			now,
@@ -338,6 +359,7 @@ app.post("/api/drawings", async (c) => {
 			bbox.x2,
 			bbox.y2,
 			ownerSecret,
+			igHandle,
 		)
 		.run();
 
@@ -364,7 +386,8 @@ app.post("/api/drawings/mine", async (c) => {
 
 	const res = await c.env.DB.prepare(
 		`SELECT id, created_at, name, country, city, region, likes,
-		        bbox_x1, bbox_y1, bbox_x2, bbox_y2, strokes
+		        bbox_x1, bbox_y1, bbox_x2, bbox_y2, strokes,
+		        instagram_handle
 		   FROM drawings
 		  WHERE owner_secret = ? AND hidden = 0
 		  ORDER BY created_at DESC
@@ -388,6 +411,7 @@ app.post("/api/drawings/mine", async (c) => {
 			y2: r.bbox_y2 ?? 0,
 		},
 		strokes: safeParseStrokes(r.strokes as string),
+		instagram_handle: r.instagram_handle,
 	}));
 	return c.json({ drawings });
 });
@@ -446,13 +470,24 @@ app.patch("/api/drawings/:id", async (c) => {
 	}
 
 	const bbox = calcBbox(validatedStrokes);
+	const igHandle = sanitizeIgHandle(body.instagram_handle);
 	await c.env.DB.prepare(
 		`UPDATE drawings
 		    SET name = ?, strokes = ?,
-		        bbox_x1 = ?, bbox_y1 = ?, bbox_x2 = ?, bbox_y2 = ?
+		        bbox_x1 = ?, bbox_y1 = ?, bbox_x2 = ?, bbox_y2 = ?,
+		        instagram_handle = ?
 		  WHERE id = ?`,
 	)
-		.bind(name, strokesJson, bbox.x1, bbox.y1, bbox.x2, bbox.y2, id)
+		.bind(
+			name,
+			strokesJson,
+			bbox.x1,
+			bbox.y1,
+			bbox.x2,
+			bbox.y2,
+			igHandle,
+			id,
+		)
 		.run();
 
 	return c.json({ ok: true });

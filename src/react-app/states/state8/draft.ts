@@ -12,6 +12,7 @@ export interface Draft {
 	size: number;
 	opacity: number;
 	name: string;
+	instagram: string;
 	startedAt: number;
 }
 
@@ -30,6 +31,7 @@ export function loadDraft(): Draft | null {
 			size: typeof d.size === "number" ? d.size : 6,
 			opacity: typeof d.opacity === "number" ? d.opacity : 1,
 			name: typeof d.name === "string" ? d.name : "",
+			instagram: typeof d.instagram === "string" ? d.instagram : "",
 			startedAt: typeof d.startedAt === "number" ? d.startedAt : Date.now(),
 		};
 	} catch {

@@ -3,6 +3,7 @@ import type { FullDrawing } from "./types";
 import { drawStrokesProgressive, totalPoints } from "./render";
 import { adminBan, adminHide, isAdminMode, likeDrawing } from "./api";
 import { isMyDrawing } from "./owner";
+import { instagramUrl } from "./instagram";
 import "./Detail.css";
 
 interface Props {
@@ -160,6 +161,21 @@ export default function Detail({ drawing, onClose, onHidden, onEdit }: Props) {
 					>
 						♥ {likes}
 					</button>
+					{drawing.instagram_handle && (
+						<a
+							className="dm__ig"
+							href={instagramUrl(drawing.instagram_handle)}
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label={`Instagram: @${drawing.instagram_handle}`}
+							title={`@${drawing.instagram_handle}`}
+						>
+							<InstagramIcon />
+							<span className="dm__igHandle">
+								@{drawing.instagram_handle}
+							</span>
+						</a>
+					)}
 					{owned && onEdit && (
 						<button
 							className="dm__edit"
@@ -277,4 +293,24 @@ function formatDrawTime(ms: number): string {
 	const m = Math.floor(ms / 60000);
 	const s = Math.floor((ms % 60000) / 1000);
 	return `${m}m ${s}s`;
+}
+
+function InstagramIcon() {
+	// Simple monochrome glyph — colour comes from the parent's gradient bg.
+	return (
+		<svg
+			className="dm__igIcon"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			aria-hidden="true"
+		>
+			<rect x="3" y="3" width="18" height="18" rx="5" />
+			<circle cx="12" cy="12" r="4" />
+			<circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+		</svg>
+	);
 }

@@ -38,6 +38,7 @@ export async function submitDrawing(payload: {
 	viewport: { w: number; h: number };
 	device_pixel_ratio: number;
 	draw_time_ms: number;
+	instagram_handle: string | null;
 }): Promise<{ id: number; created_at: number }> {
 	const r = await fetch(API_BASE, {
 		method: "POST",
@@ -53,7 +54,11 @@ export async function submitDrawing(payload: {
 
 export async function updateDrawing(
 	id: number,
-	payload: { name: string; strokes: Stroke[] },
+	payload: {
+		name: string;
+		strokes: Stroke[];
+		instagram_handle: string | null;
+	},
 ): Promise<void> {
 	const r = await fetch(`${API_BASE}/${id}`, {
 		method: "PATCH",

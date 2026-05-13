@@ -43,6 +43,7 @@ export interface FeedDrawing {
 	likes: number;
 	bbox: Bbox;
 	strokes: Stroke[];
+	instagram_handle: string | null;
 }
 
 /** Drawing as it comes from /api/drawings/:id — full metadata. */

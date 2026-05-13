@@ -1,17 +1,20 @@
 import { useState } from "react";
+import { sanitizeInstagram } from "./instagram";
 import "./SignModal.css";
 
 interface Props {
 	defaultName: string;
+	defaultInstagram?: string;
 	pending: boolean;
 	error: string | null;
 	editing?: boolean;
 	onCancel: () => void;
-	onSubmit: (name: string) => void;
+	onSubmit: (name: string, instagram: string | null) => void;
 }
 
 export default function SignModal({
 	defaultName,
+	defaultInstagram,
 	pending,
 	error,
 	editing,
@@ -19,8 +22,20 @@ export default function SignModal({
 	onSubmit,
 }: Props) {
 	const [name, setName] = useState(defaultName);
-	const trimmed = name.trim();
-	const valid = trimmed.length > 0 && trimmed.length <= 40;
+	const [instagram, setInstagram] = useState(defaultInstagram ?? "");
+	const trimmedName = name.trim();
+	const validName = trimmedName.length > 0 && trimmedName.length <= 40;
+
+	// Empty IG is valid (it's optional). Non-empty must sanitise to non-null.
+	const igTrimmed = instagram.trim();
+	const igSanitized = igTrimmed ? sanitizeInstagram(igTrimmed) : null;
+	const igValid = igTrimmed === "" || igSanitized !== null;
+	const valid = validName && igValid;
+
+	const submit = () => {
+		if (!valid || pending) return;
+		onSubmit(trimmedName, igSanitized);
+	};
 
 	return (
 		<div className="signOverlay">
@@ -42,11 +57,38 @@ export default function SignModal({
 					onChange={(e) => setName(e.target.value)}
 					autoFocus
 					onKeyDown={(e) => {
-						if (e.key === "Enter" && valid && !pending)
-							onSubmit(trimmed);
+						if (e.key === "Enter") submit();
 						if (e.key === "Escape" && !pending) onCancel();
 					}}
 				/>
+				<div className="signCard__igGroup">
+					<label className="signCard__igLabel">
+						Instagram <span className="signCard__igOpt">(optional)</span>
+					</label>
+					<div className="signCard__igInputWrap">
+						<span className="signCard__igPrefix">@</span>
+						<input
+							className="signCard__igInput"
+							type="text"
+							value={instagram}
+							maxLength={64}
+							placeholder="your_handle"
+							autoComplete="off"
+							autoCapitalize="off"
+							spellCheck={false}
+							onChange={(e) => setInstagram(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") submit();
+								if (e.key === "Escape" && !pending) onCancel();
+							}}
+						/>
+					</div>
+					{!igValid && (
+						<div className="signCard__igError">
+							That doesn't look like a valid Instagram handle.
+						</div>
+					)}
+				</div>
 				{!editing && (
 					<div className="signCard__notice">
 						<strong>Heads up:</strong> when you submit, this page will
@@ -67,7 +109,7 @@ export default function SignModal({
 					<button
 						className="signCard__btn signCard__btn--primary"
 						disabled={!valid || pending}
-						onClick={() => onSubmit(trimmed)}
+						onClick={submit}
 					>
 						{pending
 							? editing
