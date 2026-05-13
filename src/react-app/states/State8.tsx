@@ -375,11 +375,11 @@ export default function State8() {
 						</svg>
 					</button>
 					<div className="s8__brand">
-						<div className="s8__brandTitle">Maxsonny</div>
+						<div className="s8__brandTitle">Subdermal</div>
 						<div className="s8__brandSub">
 							{editingId !== null
 								? "editing your drawing"
-								: `${existing.length} drawing${existing.length === 1 ? "" : "s"}`}
+								: `${existing.length} artwork${existing.length === 1 ? "" : "s"}`}
 							{admin && " · admin"}
 							{feedError && " · feed error"}
 						</div>
