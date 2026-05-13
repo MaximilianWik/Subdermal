@@ -1,4 +1,5 @@
 import type { FeedDrawing, FullDrawing, Stroke } from "./types";
+import { getOwnerSecret } from "./owner";
 
 // ─────────────────────────────────────────────────────────────
 //  API helpers — thin wrappers around fetch().
@@ -41,13 +42,39 @@ export async function submitDrawing(payload: {
 	const r = await fetch(API_BASE, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(payload),
+		body: JSON.stringify({ ...payload, owner_secret: getOwnerSecret() }),
 	});
 	if (!r.ok) {
 		const t = await r.text();
 		throw new Error(`POST ${r.status}: ${t}`);
 	}
 	return (await r.json()) as { id: number; created_at: number };
+}
+
+export async function updateDrawing(
+	id: number,
+	payload: { name: string; strokes: Stroke[] },
+): Promise<void> {
+	const r = await fetch(`${API_BASE}/${id}`, {
+		method: "PATCH",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ ...payload, owner_secret: getOwnerSecret() }),
+	});
+	if (!r.ok) {
+		const t = await r.text();
+		throw new Error(`PATCH ${r.status}: ${t}`);
+	}
+}
+
+export async function fetchMine(): Promise<FeedDrawing[]> {
+	const r = await fetch(`${API_BASE}/mine`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ owner_secret: getOwnerSecret() }),
+	});
+	if (!r.ok) throw new Error(`mine ${r.status}`);
+	const j = (await r.json()) as { drawings: FeedDrawing[] };
+	return j.drawings;
 }
 
 export async function likeDrawing(id: number): Promise<{ likes: number }> {

@@ -6,12 +6,15 @@ import Toolbar from "./state8/Toolbar";
 import SignModal from "./state8/SignModal";
 import Detail from "./state8/Detail";
 import BanList from "./state8/BanList";
+import MyDrawings from "./state8/MyDrawings";
 import {
 	fetchFeed,
 	fetchOne,
 	isAdminMode,
 	submitDrawing,
+	updateDrawing,
 } from "./state8/api";
+import { rememberMyDrawing } from "./state8/owner";
 import { clearDraft, loadDraft, saveDraft, type Draft } from "./state8/draft";
 import type {
 	FeedDrawing,
@@ -73,6 +76,11 @@ export default function State8() {
 	const [detail, setDetail] = useState<FullDrawing | null>(null);
 	const [detailLoading, setDetailLoading] = useState(false);
 	const [bansOpen, setBansOpen] = useState(false);
+	const [mineOpen, setMineOpen] = useState(false);
+	// editingId !== null → draft is editing an existing drawing.
+	// We stash the original copy so Cancel restores it to the canvas.
+	const [editingId, setEditingId] = useState<number | null>(null);
+	const editingOriginalRef = useRef<FeedDrawing | null>(null);
 
 	const canvasHandleRef = useRef<CanvasViewHandle>(null);
 
@@ -165,12 +173,26 @@ export default function State8() {
 	};
 
 	const cancelDraft = () => {
+		const isEditing = editingId !== null;
 		if (
 			draftStrokes.length > 0 &&
-			!confirm("Discard your drawing? This cannot be undone.")
+			!confirm(
+				isEditing
+					? "Discard your edits? The drawing will be restored to its previous version."
+					: "Discard your drawing? This cannot be undone.",
+			)
 		) {
 			return;
 		}
+		// If editing, put the original drawing back on the canvas.
+		if (isEditing && editingOriginalRef.current) {
+			const orig = editingOriginalRef.current;
+			setExisting((arr) =>
+				arr.some((d) => d.id === orig.id) ? arr : [orig, ...arr],
+			);
+		}
+		setEditingId(null);
+		editingOriginalRef.current = null;
 		setDraftStrokes([]);
 		setHistory([]);
 		setFuture([]);
@@ -194,18 +216,28 @@ export default function State8() {
 		setSubmitting(true);
 		setSubmitError(null);
 		try {
-			await submitDrawing({
-				name,
-				strokes: draftStrokes,
-				canvas: { width: WORLD_W, height: WORLD_H },
-				viewport: { w: window.innerWidth, h: window.innerHeight },
-				device_pixel_ratio: window.devicePixelRatio || 1,
-				draw_time_ms: Math.max(
-					0,
-					Date.now() - (drawStartedAtRef.current || Date.now()),
-				),
-			});
+			if (editingId !== null) {
+				await updateDrawing(editingId, {
+					name,
+					strokes: draftStrokes,
+				});
+			} else {
+				const res = await submitDrawing({
+					name,
+					strokes: draftStrokes,
+					canvas: { width: WORLD_W, height: WORLD_H },
+					viewport: { w: window.innerWidth, h: window.innerHeight },
+					device_pixel_ratio: window.devicePixelRatio || 1,
+					draw_time_ms: Math.max(
+						0,
+						Date.now() - (drawStartedAtRef.current || Date.now()),
+					),
+				});
+				rememberMyDrawing(res.id);
+			}
 			// Clear local state, reload feed
+			setEditingId(null);
+			editingOriginalRef.current = null;
 			setDraftStrokes([]);
 			setHistory([]);
 			setFuture([]);
@@ -220,6 +252,34 @@ export default function State8() {
 		} finally {
 			setSubmitting(false);
 		}
+	};
+
+	// ─── Enter edit mode for an owned drawing ───────────────
+	const enterEdit = (target: FeedDrawing) => {
+		// If there's an unsaved draft, give the user a chance to bail.
+		if (
+			draftStrokes.length > 0 &&
+			editingId === null &&
+			!confirm(
+				"You have an unsaved drawing. Loading this one will discard it. Continue?",
+			)
+		) {
+			return;
+		}
+		// Stash the original so Cancel can restore it. Pull the up-to-date
+		// version from `existing` if available — it includes the strokes.
+		const fromFeed = existing.find((d) => d.id === target.id) ?? target;
+		editingOriginalRef.current = fromFeed;
+		setExisting((arr) => arr.filter((d) => d.id !== target.id));
+		setEditingId(target.id);
+		setDraftStrokes([...fromFeed.strokes]);
+		setDraftName(fromFeed.name ?? "");
+		setHistory([]);
+		setFuture([]);
+		drawStartedAtRef.current = Date.now();
+		setDetail(null);
+		setMineOpen(false);
+		setMode("draw");
 	};
 
 	// ─── Tap on a drawing → load full + open detail ─────────
@@ -263,7 +323,9 @@ export default function State8() {
 				<div className="s8__brand">
 					<div className="s8__brandTitle">Maxsonny</div>
 					<div className="s8__brandSub">
-						{existing.length} drawing{existing.length === 1 ? "" : "s"}
+						{editingId !== null
+							? "editing your drawing"
+							: `${existing.length} drawing${existing.length === 1 ? "" : "s"}`}
 						{admin && " · admin"}
 						{feedError && " · feed error"}
 					</div>
@@ -279,6 +341,13 @@ export default function State8() {
 								⛔ Bans
 							</button>
 						)}
+						<button
+							className="s8__mineFab"
+							onClick={() => setMineOpen(true)}
+							aria-label="My drawings"
+						>
+							✎ Mine
+						</button>
 						<button
 							className="s8__drawFab"
 							onClick={enterDraw}
@@ -317,6 +386,7 @@ export default function State8() {
 					defaultName={draftName}
 					pending={submitting}
 					error={submitError}
+					editing={editingId !== null}
 					onCancel={() => {
 						if (!submitting) setSignOpen(false);
 					}}
@@ -332,10 +402,18 @@ export default function State8() {
 					drawing={detail}
 					onClose={() => setDetail(null)}
 					onHidden={removeFromCanvas}
+					onEdit={enterEdit}
 				/>
 			)}
 
 			{bansOpen && <BanList onClose={() => setBansOpen(false)} />}
+
+			{mineOpen && (
+				<MyDrawings
+					onClose={() => setMineOpen(false)}
+					onEdit={enterEdit}
+				/>
+			)}
 
 			{detailLoading && (
 				<div className="s8__loadingPill">opening drawing…</div>

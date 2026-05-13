@@ -122,6 +122,9 @@
 
 .dm__likeRow {
 	margin-bottom: 0.85rem;
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
 }
 .dm__like {
 	padding: 0.4rem 0.8rem;
@@ -136,6 +139,21 @@
 }
 .dm__like:disabled {
 	opacity: 0.5;
+}
+
+.dm__edit {
+	padding: 0.4rem 0.8rem;
+	border-radius: 999px;
+	border: 1px solid rgba(120, 180, 255, 0.4);
+	background: rgba(120, 180, 255, 0.08);
+	color: #9ec0ff;
+	font-size: 0.85rem;
+	font-weight: 600;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+.dm__edit:hover {
+	background: rgba(120, 180, 255, 0.16);
 }
 
 .dm__metaGrid {

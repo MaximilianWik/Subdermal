@@ -42,6 +42,13 @@ interface IncomingDrawing {
 	viewport?: { w: number; h: number };
 	device_pixel_ratio?: number;
 	draw_time_ms?: number;
+	owner_secret?: string;
+}
+
+interface IncomingPatch {
+	name?: string;
+	strokes?: IncomingStroke[];
+	owner_secret?: string;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -275,6 +282,14 @@ app.post("/api/drawings", async (c) => {
 		.first<{ hit: number }>();
 	if (banned) return c.json({ error: "banned" }, 403);
 
+	// Owner secret is required so the row can be edited later. We
+	// don't trust user-supplied length here — clamp aggressively.
+	const ownerSecret =
+		typeof body.owner_secret === "string" && body.owner_secret.length >= 16
+			? body.owner_secret.slice(0, 128)
+			: null;
+	if (!ownerSecret) return c.json({ error: "owner_secret required" }, 400);
+
 	const cf = c.req.raw.cf as
 		| {
 				country?: string;
@@ -295,8 +310,9 @@ app.post("/api/drawings", async (c) => {
 			city, region, colo, postal_code, timezone,
 			viewport_w, viewport_h, device_pixel_ratio,
 			draw_time_ms, canvas_width, canvas_height,
-			bbox_x1, bbox_y1, bbox_x2, bbox_y2
-		 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			bbox_x1, bbox_y1, bbox_x2, bbox_y2,
+			owner_secret
+		 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 	)
 		.bind(
 			now,
@@ -321,6 +337,7 @@ app.post("/api/drawings", async (c) => {
 			bbox.y1,
 			bbox.x2,
 			bbox.y2,
+			ownerSecret,
 		)
 		.run();
 
@@ -328,6 +345,117 @@ app.post("/api/drawings", async (c) => {
 		{ id: Number(result.meta.last_row_id), created_at: now },
 		201,
 	);
+});
+
+// POST /api/drawings/mine — list drawings owned by this owner_secret.
+// Sent over POST so the secret isn't logged as a query param.
+app.post("/api/drawings/mine", async (c) => {
+	let body: { owner_secret?: string };
+	try {
+		body = (await c.req.json()) as { owner_secret?: string };
+	} catch {
+		return c.json({ error: "invalid json" }, 400);
+	}
+	const ownerSecret =
+		typeof body.owner_secret === "string" && body.owner_secret.length >= 16
+			? body.owner_secret.slice(0, 128)
+			: null;
+	if (!ownerSecret) return c.json({ error: "owner_secret required" }, 400);
+
+	const res = await c.env.DB.prepare(
+		`SELECT id, created_at, name, country, city, region, likes,
+		        bbox_x1, bbox_y1, bbox_x2, bbox_y2, strokes
+		   FROM drawings
+		  WHERE owner_secret = ? AND hidden = 0
+		  ORDER BY created_at DESC
+		  LIMIT 200`,
+	)
+		.bind(ownerSecret)
+		.all<Record<string, unknown>>();
+
+	const drawings = (res.results ?? []).map((r) => ({
+		id: r.id,
+		created_at: r.created_at,
+		name: r.name,
+		country: r.country,
+		city: r.city,
+		region: r.region,
+		likes: r.likes,
+		bbox: {
+			x1: r.bbox_x1 ?? 0,
+			y1: r.bbox_y1 ?? 0,
+			x2: r.bbox_x2 ?? 0,
+			y2: r.bbox_y2 ?? 0,
+		},
+		strokes: safeParseStrokes(r.strokes as string),
+	}));
+	return c.json({ drawings });
+});
+
+// PATCH /api/drawings/:id — owner-authenticated edit
+app.patch("/api/drawings/:id", async (c) => {
+	const id = parseInt(c.req.param("id"), 10);
+	if (!Number.isFinite(id)) return c.json({ error: "bad id" }, 400);
+
+	let body: IncomingPatch;
+	try {
+		body = (await c.req.json()) as IncomingPatch;
+	} catch {
+		return c.json({ error: "invalid json" }, 400);
+	}
+
+	const ownerSecret =
+		typeof body.owner_secret === "string" && body.owner_secret.length >= 16
+			? body.owner_secret.slice(0, 128)
+			: null;
+	if (!ownerSecret) return c.json({ error: "owner_secret required" }, 400);
+
+	const row = await c.env.DB.prepare(
+		`SELECT owner_secret, hidden FROM drawings WHERE id = ?`,
+	)
+		.bind(id)
+		.first<{ owner_secret: string | null; hidden: number }>();
+	if (!row) return c.json({ error: "not found" }, 404);
+	if (row.hidden) return c.json({ error: "hidden" }, 403);
+	if (!row.owner_secret || row.owner_secret !== ownerSecret) {
+		return c.json({ error: "forbidden" }, 403);
+	}
+
+	const name =
+		typeof body.name === "string"
+			? body.name.trim().slice(0, MAX_NAME_LEN)
+			: "";
+	if (!name) return c.json({ error: "name required" }, 400);
+
+	if (!Array.isArray(body.strokes) || body.strokes.length === 0) {
+		return c.json({ error: "strokes required" }, 400);
+	}
+	const validatedStrokes: IncomingStroke[] = [];
+	for (const raw of body.strokes) {
+		const s = validateStroke(raw);
+		if (!s) return c.json({ error: "invalid stroke shape" }, 400);
+		validatedStrokes.push(s);
+	}
+
+	const strokesJson = JSON.stringify(validatedStrokes);
+	if (strokesJson.length > MAX_STROKES_BYTES) {
+		return c.json(
+			{ error: `too large (${strokesJson.length} > ${MAX_STROKES_BYTES})` },
+			413,
+		);
+	}
+
+	const bbox = calcBbox(validatedStrokes);
+	await c.env.DB.prepare(
+		`UPDATE drawings
+		    SET name = ?, strokes = ?,
+		        bbox_x1 = ?, bbox_y1 = ?, bbox_x2 = ?, bbox_y2 = ?
+		  WHERE id = ?`,
+	)
+		.bind(name, strokesJson, bbox.x1, bbox.y1, bbox.x2, bbox.y2, id)
+		.run();
+
+	return c.json({ ok: true });
 });
 
 // POST /api/drawings/:id/like — heart button

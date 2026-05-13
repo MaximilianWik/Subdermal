@@ -2,18 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import type { FullDrawing } from "./types";
 import { drawStrokesProgressive, totalPoints } from "./render";
 import { adminBan, adminHide, isAdminMode, likeDrawing } from "./api";
+import { isMyDrawing } from "./owner";
 import "./Detail.css";
 
 interface Props {
 	drawing: FullDrawing;
 	onClose: () => void;
 	onHidden?: (id: number) => void;
+	onEdit?: (drawing: FullDrawing) => void;
 }
 
 const REPLAY_DURATION_MS = 2200;
 const REPLAY_MIN_POINTS_PER_FRAME = 1;
 
-export default function Detail({ drawing, onClose, onHidden }: Props) {
+export default function Detail({ drawing, onClose, onHidden, onEdit }: Props) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [likes, setLikes] = useState(drawing.likes ?? 0);
 	const [liking, setLiking] = useState(false);
@@ -21,6 +23,7 @@ export default function Detail({ drawing, onClose, onHidden }: Props) {
 	const [error, setError] = useState<string | null>(null);
 	const [replayDone, setReplayDone] = useState(false);
 	const admin = isAdminMode();
+	const owned = isMyDrawing(drawing.id);
 
 	// Compute the bounding box for the canvas to fit the drawing
 	const bbox = drawing.bbox;
@@ -157,6 +160,14 @@ export default function Detail({ drawing, onClose, onHidden }: Props) {
 					>
 						♥ {likes}
 					</button>
+					{owned && onEdit && (
+						<button
+							className="dm__edit"
+							onClick={() => onEdit(drawing)}
+						>
+							✎ Edit
+						</button>
+					)}
 				</div>
 
 				<div className="dm__metaGrid">

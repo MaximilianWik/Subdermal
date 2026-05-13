@@ -5,6 +5,7 @@ interface Props {
 	defaultName: string;
 	pending: boolean;
 	error: string | null;
+	editing?: boolean;
 	onCancel: () => void;
 	onSubmit: (name: string) => void;
 }
@@ -13,6 +14,7 @@ export default function SignModal({
 	defaultName,
 	pending,
 	error,
+	editing,
 	onCancel,
 	onSubmit,
 }: Props) {
@@ -23,9 +25,13 @@ export default function SignModal({
 	return (
 		<div className="signOverlay">
 			<div className="signCard">
-				<div className="signCard__title">Sign your drawing</div>
+				<div className="signCard__title">
+					{editing ? "Save your changes" : "Sign your drawing"}
+				</div>
 				<div className="signCard__sub">
-					This will be displayed on your piece. Required.
+					{editing
+						? "Update the signature shown on your piece."
+						: "This will be displayed on your piece. Required."}
 				</div>
 				<input
 					className="signCard__input"
@@ -41,11 +47,14 @@ export default function SignModal({
 						if (e.key === "Escape" && !pending) onCancel();
 					}}
 				/>
-				<div className="signCard__notice">
-					<strong>Heads up:</strong> when you submit, this page will
-					publicly display your name, country, city, IP address, device
-					info, and browser details on your drawing's signature card.
-				</div>
+				{!editing && (
+					<div className="signCard__notice">
+						<strong>Heads up:</strong> when you submit, this page will
+						publicly display your name, country, city, IP address,
+						device info, and browser details on your drawing's
+						signature card.
+					</div>
+				)}
 				{error && <div className="signCard__error">{error}</div>}
 				<div className="signCard__actions">
 					<button
@@ -60,7 +69,13 @@ export default function SignModal({
 						disabled={!valid || pending}
 						onClick={() => onSubmit(trimmed)}
 					>
-						{pending ? "Submitting…" : "Submit"}
+						{pending
+							? editing
+								? "Saving…"
+								: "Submitting…"
+							: editing
+								? "Save"
+								: "Submit"}
 					</button>
 				</div>
 			</div>
