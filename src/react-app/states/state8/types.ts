@@ -75,9 +75,9 @@ export const INITIAL_VIEW_H = 1536;
 
 // Brush size limits (in world px at zoom 1)
 export const BRUSH_SIZE_MIN = 1;
-export const BRUSH_SIZE_MAX = 80;
+export const BRUSH_SIZE_MAX = 50;
 export const ERASER_SIZE_MIN = 4;
-export const ERASER_SIZE_MAX = 80;
+export const ERASER_SIZE_MAX = 50;
 
 // Pixel art cell size — must match the minor grid spacing in
 // CanvasView's drawGrid so each filled pixel sits exactly inside
