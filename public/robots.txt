@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://max-wik.com/sitemap.xml

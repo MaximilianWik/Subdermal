@@ -7,10 +7,101 @@
 			content="width=device-width, initial-scale=1.0, viewport-fit=cover"
 		/>
 		<meta name="theme-color" content="#000000" />
-		<title>QR Code Domain</title>
+
+		<!-- ─── SEO ─────────────────────────────────────────── -->
+		<title>Maximilian Wikström — Subdermal</title>
+		<meta
+			name="description"
+			content="Subdermal is a collaborative canvas by Maximilian Wikström, hosted at the destination of a QR code tattooed on his arm. Every drawing on it lives there permanently, next to everyone else's, for as long as the skin holds."
+		/>
+		<meta name="author" content="Maximilian Wikström" />
+		<meta name="robots" content="index, follow" />
+		<link rel="canonical" href="https://max-wik.com/" />
+
+		<!-- Open Graph / social previews -->
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Subdermal" />
+		<meta property="og:url" content="https://max-wik.com/" />
+		<meta
+			property="og:title"
+			content="Maximilian Wikström — Subdermal"
+		/>
+		<meta
+			property="og:description"
+			content="Subdermal is a collaborative canvas by Maximilian Wikström, hosted at the destination of a QR code tattooed on his arm."
+		/>
+		<meta property="og:image" content="https://max-wik.com/maximilian.png" />
+
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta
+			name="twitter:title"
+			content="Maximilian Wikström — Subdermal"
+		/>
+		<meta
+			name="twitter:description"
+			content="A QR-tattoo collaborative canvas by Maximilian Wikström."
+		/>
+		<meta name="twitter:image" content="https://max-wik.com/maximilian.png" />
+
+		<!-- Person schema so Google knows who this domain represents -->
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "Person",
+				"name": "Maximilian Wikström",
+				"alternateName": "Max Wik",
+				"url": "https://max-wik.com/",
+				"image": "https://max-wik.com/maximilian.png",
+				"sameAs": [
+					"https://maximilian-wikstrom.vercel.app/",
+					"https://www.instagram.com/max_wik/",
+					"https://github.com/MaximilianWik"
+				]
+			}
+		</script>
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "WebSite",
+				"name": "Subdermal",
+				"alternateName": "max-wik.com",
+				"url": "https://max-wik.com/",
+				"author": {
+					"@type": "Person",
+					"name": "Maximilian Wikström"
+				}
+			}
+		</script>
 	</head>
 	<body>
 		<div id="root"></div>
+
+		<!--
+			Crawler / no-JS fallback. The real app is a single-page React
+			canvas, but search engines that can't run JS still see this
+			content. It's also the only place "Maximilian Wikström" appears
+			before any JS executes.
+		-->
+		<noscript>
+			<h1>Subdermal — Maximilian Wikström</h1>
+			<p>
+				Subdermal is a shared, ever-growing canvas by
+				<strong>Maximilian Wikström</strong>, reachable through a
+				QR code tattooed on his arm. Every drawing posted to this
+				canvas lives there permanently, alongside everyone
+				else's, for as long as the skin holds.
+			</p>
+			<p>
+				Find more of Maximilian's work at
+				<a href="https://maximilian-wikstrom.vercel.app/"
+					>maximilian-wikstrom.vercel.app</a
+				>, on
+				<a href="https://www.instagram.com/max_wik/">Instagram</a>,
+				or on
+				<a href="https://github.com/MaximilianWik">GitHub</a>.
+			</p>
+		</noscript>
+
 		<script type="module" src="/src/react-app/main.tsx"></script>
 	</body>
 </html>
