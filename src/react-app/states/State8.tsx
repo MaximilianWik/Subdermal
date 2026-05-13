@@ -98,13 +98,8 @@ export default function State8() {
 	const [bansOpen, setBansOpen] = useState(false);
 	const [mineOpen, setMineOpen] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
-	const [rulesOpen, setRulesOpen] = useState<boolean>(() => {
-		try {
-			return localStorage.getItem("state8.rulesAccepted.v1") !== "1";
-		} catch {
-			return true;
-		}
-	});
+	// Rules show on every page load — no localStorage gate.
+	const [rulesOpen, setRulesOpen] = useState(true);
 	// editingId !== null → draft is editing an existing drawing.
 	// We stash the original copy so Cancel restores it to the canvas.
 	const [editingId, setEditingId] = useState<number | null>(null);
@@ -481,14 +476,7 @@ export default function State8() {
 
 			{rulesOpen && (
 				<Rules
-					onAccept={() => {
-						try {
-							localStorage.setItem("state8.rulesAccepted.v1", "1");
-						} catch {
-							/* ignore — they'll see it again next session */
-						}
-						setRulesOpen(false);
-					}}
+					onAccept={() => setRulesOpen(false)}
 				/>
 			)}
 

@@ -39,7 +39,7 @@ const GLITCH_IMAGES = [
 	"/glitch/glitch14.jpg",
 ];
 
-export default function State7() {
+export default function State7({ onComplete }: { onComplete?: () => void } = {}) {
 	const [phase, setPhase] = useState<Phase>("terminal");
 
 	// Preload glitch images on mount so they're already in cache when
@@ -63,7 +63,7 @@ export default function State7() {
 		<div className="s7">
 			{phase === "terminal" && <Terminal />}
 			{phase === "glitch" && <GlitchScreen />}
-			{phase === "reveal" && <Reveal />}
+			{phase === "reveal" && <Reveal onDone={onComplete} />}
 		</div>
 	);
 }
@@ -266,7 +266,7 @@ function GlitchScreen() {
 
 const REVEAL_TEXT = "...just kidding.";
 
-function Reveal() {
+function Reveal({ onDone }: { onDone?: () => void }) {
 	const [typed, setTyped] = useState("");
 
 	useEffect(() => {
@@ -278,6 +278,16 @@ function Reveal() {
 		}, 95);
 		return () => clearInterval(id);
 	}, []);
+
+	// Hold the reveal for a beat after it finishes typing, then signal
+	// the parent (App) to transition out of the intro.
+	useEffect(() => {
+		if (!onDone) return;
+		const typingMs = REVEAL_TEXT.length * 95;
+		const holdMs = 1500;
+		const id = setTimeout(onDone, typingMs + holdMs);
+		return () => clearTimeout(id);
+	}, [onDone]);
 
 	return (
 		<div className="s7-reveal">

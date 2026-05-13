@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { STATE } from "../../state";
 import { states, type StateKey } from "./states";
+import State7 from "./states/State7";
 import "./App.css";
 
 // Hash-based override lets the canvas's menu navigate temporarily to
@@ -20,19 +21,41 @@ function readHashOverride(): StateKey | null {
 export default function App() {
 	const [override, setOverride] = useState<StateKey | null>(readHashOverride);
 
+	// Intro: replay State 7's "rm -rf" cinematic on every page load /
+	// QR scan, then transition to the canonical STATE. Skipped when:
+	//   - the user deep-links a view override (#view=N), or
+	//   - the canonical STATE is already 7 (the cinematic itself).
+	// Once dismissed (by completion or by any navigation), it never
+	// replays inside this SPA session.
+	const [introDone, setIntroDone] = useState(
+		() => readHashOverride() !== null || STATE === 7,
+	);
+
 	useEffect(() => {
 		const onHash = () => setOverride(readHashOverride());
 		window.addEventListener("hashchange", onHash);
 		return () => window.removeEventListener("hashchange", onHash);
 	}, []);
 
+	// Any navigation away from the intro (e.g. menu click during the
+	// cinematic) should commit "intro is done" so coming back doesn't
+	// replay it.
+	useEffect(() => {
+		if (override !== null) setIntroDone(true);
+	}, [override]);
+
+	const showIntro = !introDone && override === null;
 	const activeKey = override ?? STATE;
 	const Active = states[activeKey];
-	const showBack = override !== null && STATE === 8;
+	const showBack = !showIntro && override !== null && STATE === 8;
 
 	return (
 		<div id="center">
-			<Active />
+			{showIntro ? (
+				<State7 onComplete={() => setIntroDone(true)} />
+			) : (
+				<Active />
+			)}
 			{showBack && (
 				<button
 					className="backToCanvas"
