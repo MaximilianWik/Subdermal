@@ -23,8 +23,8 @@ const RULES: Rule[] = [
 	{
 		tone: "ok",
 		icon: "✓",
-		title: "Profanity and NSFW jokes are encouraged",
-		body: "This is a QR tattoo on some guy's arm. The bar was on the floor before you got here. Be rude, be cursed, be funny. Just stay on the right side of actually illegal.",
+		title: "Profanity and NSFW",
+		body: "This is a QR tattoo on some guy's arm. The bar was on the floor before you got here.",
 	},
 	{
 		tone: "ban",
