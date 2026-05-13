@@ -8,6 +8,7 @@ import Detail from "./state8/Detail";
 import BanList from "./state8/BanList";
 import MyDrawings from "./state8/MyDrawings";
 import Menu from "./state8/Menu";
+import Rules from "./state8/Rules";
 import {
 	fetchFeed,
 	fetchOne,
@@ -80,6 +81,13 @@ export default function State8() {
 	const [bansOpen, setBansOpen] = useState(false);
 	const [mineOpen, setMineOpen] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
+	const [rulesOpen, setRulesOpen] = useState<boolean>(() => {
+		try {
+			return localStorage.getItem("state8.rulesAccepted.v1") !== "1";
+		} catch {
+			return true;
+		}
+	});
 	// editingId !== null → draft is editing an existing drawing.
 	// We stash the original copy so Cancel restores it to the canvas.
 	const [editingId, setEditingId] = useState<number | null>(null);
@@ -452,6 +460,19 @@ export default function State8() {
 			)}
 
 			<Menu open={menuOpen} onClose={() => setMenuOpen(false)} />
+
+			{rulesOpen && (
+				<Rules
+					onAccept={() => {
+						try {
+							localStorage.setItem("state8.rulesAccepted.v1", "1");
+						} catch {
+							/* ignore — they'll see it again next session */
+						}
+						setRulesOpen(false);
+					}}
+				/>
+			)}
 
 			{detailLoading && (
 				<div className="s8__loadingPill">opening drawing…</div>
