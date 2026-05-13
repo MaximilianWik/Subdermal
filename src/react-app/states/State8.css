@@ -34,6 +34,13 @@
 	pointer-events: none;
 }
 
+.s8__topbarLeft {
+	pointer-events: auto;
+	display: flex;
+	gap: 0.5rem;
+	align-items: flex-start;
+}
+
 .s8__brand {
 	background: rgba(20, 20, 20, 0.78);
 	backdrop-filter: blur(10px);

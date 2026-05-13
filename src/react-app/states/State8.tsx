@@ -7,6 +7,7 @@ import SignModal from "./state8/SignModal";
 import Detail from "./state8/Detail";
 import BanList from "./state8/BanList";
 import MyDrawings from "./state8/MyDrawings";
+import Menu from "./state8/Menu";
 import {
 	fetchFeed,
 	fetchOne,
@@ -78,6 +79,7 @@ export default function State8() {
 	const [detailLoading, setDetailLoading] = useState(false);
 	const [bansOpen, setBansOpen] = useState(false);
 	const [mineOpen, setMineOpen] = useState(false);
+	const [menuOpen, setMenuOpen] = useState(false);
 	// editingId !== null → draft is editing an existing drawing.
 	// We stash the original copy so Cancel restores it to the canvas.
 	const [editingId, setEditingId] = useState<number | null>(null);
@@ -329,14 +331,37 @@ export default function State8() {
 
 			{/* Top-bar info / mode toggle */}
 			<div className="s8__topbar">
-				<div className="s8__brand">
-					<div className="s8__brandTitle">Maxsonny</div>
-					<div className="s8__brandSub">
-						{editingId !== null
-							? "editing your drawing"
-							: `${existing.length} drawing${existing.length === 1 ? "" : "s"}`}
-						{admin && " · admin"}
-						{feedError && " · feed error"}
+				<div className="s8__topbarLeft">
+					<button
+						className="s8__menuFab"
+						onClick={() => setMenuOpen(true)}
+						aria-label="Open menu"
+					>
+						<svg
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							aria-hidden="true"
+						>
+							<line x1="4" y1="7" x2="20" y2="7" />
+							<line x1="4" y1="12" x2="20" y2="12" />
+							<line x1="4" y1="17" x2="20" y2="17" />
+						</svg>
+					</button>
+					<div className="s8__brand">
+						<div className="s8__brandTitle">Maxsonny</div>
+						<div className="s8__brandSub">
+							{editingId !== null
+								? "editing your drawing"
+								: `${existing.length} drawing${existing.length === 1 ? "" : "s"}`}
+							{admin && " · admin"}
+							{feedError && " · feed error"}
+						</div>
 					</div>
 				</div>
 				{mode === "view" && (
@@ -425,6 +450,8 @@ export default function State8() {
 					onEdit={enterEdit}
 				/>
 			)}
+
+			<Menu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
 			{detailLoading && (
 				<div className="s8__loadingPill">opening drawing…</div>
