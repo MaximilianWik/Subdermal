@@ -16,7 +16,7 @@ import {
 	PIXEL_CELL,
 } from "./types";
 import { OccupancyGrid } from "./occupancy";
-import { drawStrokes } from "./render";
+import { BLENDER_PREVIEW_PATH, drawStrokes } from "./render";
 import "./CanvasView.css";
 
 // ─────────────────────────────────────────────────────────────
@@ -862,7 +862,15 @@ export default function CanvasView({
 				ref={blenderCursorRef}
 				className="cv__blenderCursor"
 				aria-hidden
-			/>
+			>
+				<svg
+					className="cv__blenderCursor__svg"
+					viewBox="-1 -1 2 2"
+					preserveAspectRatio="none"
+				>
+					<path d={BLENDER_PREVIEW_PATH} />
+				</svg>
+			</div>
 		</div>
 	);
 }

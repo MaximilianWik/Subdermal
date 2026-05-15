@@ -404,11 +404,14 @@ function renderPixel(
 //
 // The blender doesn't introduce new colours: at paint time CanvasView
 // samples the canvas under each step and stores the colour into
-// stroke.pointColors. Here we stamp each sampled colour as a small
-// cluster of overlapping soft radial gradients with seeded jitter, so
-// the brush tip has irregular cloud-like edges instead of a clean
-// circle. Per-stamp randomness is seeded from the stamp's world coords
-// so the shape is stable across redraws and replays.
+// stroke.pointColors. Each stamp is a closed path traced as a wavy
+// silhouette (radius modulated by two sinusoids with seeded phases)
+// rather than a circle, so the brush footprint has clear concave dips
+// and convex bumps — a cloud, not a disc. The path is filled with a
+// soft radial gradient so edges still feather. Per-stamp seed comes
+// from the stamp's world coords so the shape is stable across redraws
+// and replays.
+const BLENDER_PATH_SAMPLES = 24;
 function renderBlender(
 	ctx: CanvasRenderingContext2D,
 	s: Stroke,
@@ -418,10 +421,9 @@ function renderBlender(
 	if (!colors || colors.length === 0) return;
 	const pts = s.points;
 	const radius = s.size;
-	const stampAlpha = Math.max(0, Math.min(1, s.opacity)) * 0.35;
+	const stampAlpha = Math.max(0, Math.min(1, s.opacity)) * 0.4;
 	ctx.globalCompositeOperation = "source-over";
 
-	const BLOBS = 5;
 	for (let i = 0; i < limit; i += 2) {
 		const ci = i >> 1;
 		if (ci >= colors.length) break;
@@ -434,40 +436,74 @@ function renderBlender(
 		const x = pts[i];
 		const y = pts[i + 1];
 
-		// Deterministic per-stamp RNG seeded from world coords so the
-		// cloud shape doesn't shimmer when the canvas redraws.
+		// Seeded RNG so the cloud silhouette is deterministic per stamp.
 		let seed = (((x | 0) * 73856093) ^ ((y | 0) * 19349663)) >>> 0;
 		if (seed === 0) seed = 1;
 		const rand = () => {
 			seed = (seed * 1664525 + 1013904223) >>> 0;
 			return seed / 0xffffffff;
 		};
+		const phase1 = rand() * Math.PI * 2;
+		const phase2 = rand() * Math.PI * 2;
 
-		// Lay down N overlapping soft blobs with jittered offset/size.
-		// Per-blob alpha is reduced so multiple overlaps build up to
-		// roughly the original single-stamp density at the centre while
-		// the edge gets the irregular cloud silhouette.
-		const perBlobAlpha = stampAlpha * 0.45;
-		for (let j = 0; j < BLOBS; j++) {
-			const ox = (rand() - 0.5) * radius * 0.85;
-			const oy = (rand() - 0.5) * radius * 0.85;
-			const subR = radius * (0.45 + rand() * 0.55);
-			const cx = x + ox;
-			const cy = y + oy;
-			const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, subR);
-			grad.addColorStop(0, `rgba(${r},${g},${b},${perBlobAlpha})`);
-			grad.addColorStop(
-				0.55,
-				`rgba(${r},${g},${b},${perBlobAlpha * 0.45})`,
-			);
-			grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
-			ctx.fillStyle = grad;
-			ctx.beginPath();
-			ctx.arc(cx, cy, subR, 0, Math.PI * 2);
-			ctx.fill();
+		// Trace the cloud silhouette. Two sinusoids at different angular
+		// frequencies (5θ and 3θ) produce visible bumps and dips around
+		// the perimeter; the result extends to ~1.37·radius at peaks and
+		// recedes to ~0.63·radius at troughs.
+		ctx.beginPath();
+		for (let j = 0; j <= BLENDER_PATH_SAMPLES; j++) {
+			const ang = (j / BLENDER_PATH_SAMPLES) * Math.PI * 2;
+			const wave =
+				1.0 +
+				Math.sin(ang * 5 + phase1) * 0.22 +
+				Math.sin(ang * 3 + phase2) * 0.15;
+			const px = x + Math.cos(ang) * radius * wave;
+			const py = y + Math.sin(ang) * radius * wave;
+			if (j === 0) ctx.moveTo(px, py);
+			else ctx.lineTo(px, py);
 		}
+		ctx.closePath();
+
+		// Soft radial gradient inside the cloud silhouette. Gradient
+		// extent slightly larger than `radius` so the high bumps still
+		// see a non-zero alpha at their tips.
+		const grad = ctx.createRadialGradient(x, y, 0, x, y, radius * 1.4);
+		grad.addColorStop(0, `rgba(${r},${g},${b},${stampAlpha})`);
+		grad.addColorStop(0.65, `rgba(${r},${g},${b},${stampAlpha * 0.55})`);
+		grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+		ctx.fillStyle = grad;
+		ctx.fill();
 	}
 }
+
+// Pre-computed wavy path string used by the blender hover cursor in
+// CanvasView so the preview matches what the brush actually deposits.
+// Same wave formula as renderBlender, just with a fixed seed so the
+// shape is stable across the whole session.
+function buildCloudPathD(seed: number): string {
+	let s = seed >>> 0;
+	if (s === 0) s = 1;
+	const rand = () => {
+		s = (s * 1664525 + 1013904223) >>> 0;
+		return s / 0xffffffff;
+	};
+	const phase1 = rand() * Math.PI * 2;
+	const phase2 = rand() * Math.PI * 2;
+	const N = BLENDER_PATH_SAMPLES;
+	let d = "";
+	for (let j = 0; j <= N; j++) {
+		const ang = (j / N) * Math.PI * 2;
+		const wave =
+			1.0 +
+			Math.sin(ang * 5 + phase1) * 0.22 +
+			Math.sin(ang * 3 + phase2) * 0.15;
+		const x = Math.cos(ang) * wave;
+		const y = Math.sin(ang) * wave;
+		d += (j === 0 ? "M" : "L") + x.toFixed(3) + " " + y.toFixed(3) + " ";
+	}
+	return d + "Z";
+}
+export const BLENDER_PREVIEW_PATH = buildCloudPathD(0xc10dface);
 
 // ─── Bulk renderers ──────────────────────────────────────────
 
