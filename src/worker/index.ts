@@ -35,6 +35,7 @@ interface IncomingStroke {
 	size: number;
 	opacity: number;
 	points: number[]; // flat: [x0, y0, x1, y1, ...] in WORLD coords
+	pointColors?: number[]; // optional, blender only
 }
 interface IncomingDrawing {
 	name?: string;
@@ -132,6 +133,7 @@ const VALID_TOOLS: ReadonlyArray<ToolType> = [
 	"spray",
 	"airbrush",
 	"pixel",
+	"blender",
 	"eyedropper",
 	"eraser",
 ];
@@ -152,12 +154,25 @@ function validateStroke(s: unknown): IncomingStroke | null {
 	for (const p of o.points) {
 		if (typeof p !== "number" || !Number.isFinite(p)) return null;
 	}
+	let pointColors: number[] | undefined;
+	if (o.pointColors !== undefined) {
+		if (!Array.isArray(o.pointColors)) return null;
+		// Length must match the number of points (one colour per (x,y) pair).
+		if (o.pointColors.length * 2 !== o.points.length) return null;
+		for (const c of o.pointColors) {
+			if (typeof c !== "number" || !Number.isInteger(c)) return null;
+			// Allow -1 as the "sample failed / skip" sentinel.
+			if (c < -1 || c > 0xffffff) return null;
+		}
+		pointColors = o.pointColors as number[];
+	}
 	return {
 		tool: tool as ToolType,
 		color: o.color,
 		size: o.size,
 		opacity: o.opacity,
 		points: o.points as number[],
+		...(pointColors ? { pointColors } : {}),
 	};
 }
 

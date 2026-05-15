@@ -203,7 +203,7 @@ export default function CanvasView({
 		const canvas = canvasElRef.current;
 		const wrap = wrapRef.current;
 		if (!canvas || !wrap) return;
-		const ctx = canvas.getContext("2d");
+		const ctx = canvas.getContext("2d", { willReadFrequently: true });
 		if (!ctx) return;
 		const dpr = window.devicePixelRatio || 1;
 		const v = viewRef.current;
@@ -354,14 +354,18 @@ export default function CanvasView({
 					size,
 					opacity,
 					points: [],
+					...(tool === "blender" ? { pointColors: [] } : {}),
 				};
 			} else {
+				const seedColor =
+					tool === "blender" ? samplePixelInt(sx, sy) : -1;
 				currentStrokeRef.current = {
 					tool,
 					color,
 					size,
 					opacity,
 					points: [wx, wy],
+					...(tool === "blender" ? { pointColors: [seedColor] } : {}),
 				};
 				liveStrokesRef.current.push(currentStrokeRef.current);
 			}
@@ -474,6 +478,7 @@ export default function CanvasView({
 						size,
 						opacity,
 						points: [],
+						...(tool === "blender" ? { pointColors: [] } : {}),
 					};
 				}
 				return;
@@ -481,6 +486,9 @@ export default function CanvasView({
 			if (cur.points.length === 0) {
 				// First valid point — push fresh stroke onto live list
 				cur.points.push(wx, wy);
+				if (tool === "blender") {
+					(cur.pointColors ??= []).push(samplePixelInt(sx, sy));
+				}
 				liveStrokesRef.current.push(cur);
 			} else {
 				// Don't append duplicate points if user holds still
@@ -488,6 +496,9 @@ export default function CanvasView({
 				const ly = cur.points[cur.points.length - 1];
 				if (Math.hypot(wx - lx, wy - ly) > 1) {
 					cur.points.push(wx, wy);
+					if (tool === "blender") {
+						(cur.pointColors ??= []).push(samplePixelInt(sx, sy));
+					}
 				}
 			}
 			scheduleDraw();
@@ -621,7 +632,7 @@ export default function CanvasView({
 	const samplePixelHex = (sx: number, sy: number): string | null => {
 		const canvas = canvasElRef.current;
 		if (!canvas) return null;
-		const ctx = canvas.getContext("2d");
+		const ctx = canvas.getContext("2d", { willReadFrequently: true });
 		if (!ctx) return null;
 		const dpr = window.devicePixelRatio || 1;
 		const px = Math.floor(sx * dpr);
@@ -643,6 +654,15 @@ export default function CanvasView({
 		} catch {
 			return null;
 		}
+	};
+
+	// Same sampler, returns the colour as a packed 0xRRGGBB integer
+	// (or -1 sentinel on failure). Used by the blender brush which
+	// stores per-point sampled colours in stroke.pointColors.
+	const samplePixelInt = (sx: number, sy: number): number => {
+		const hex = samplePixelHex(sx, sy);
+		if (!hex) return -1;
+		return parseInt(hex.slice(1), 16);
 	};
 
 	const updateDropperCursor = (

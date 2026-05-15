@@ -62,6 +62,9 @@ export function drawStroke(
 		case "pixel":
 			renderPixel(ctx, stroke, limit);
 			break;
+		case "blender":
+			renderBlender(ctx, stroke, limit);
+			break;
 		case "eyedropper":
 			// Eyedropper never produces strokes — sampling happens
 			// inline in CanvasView's pointer handler.
@@ -397,6 +400,50 @@ function renderPixel(
 	}
 }
 
+// ─── 11. Blender — soft, colourless smear ───────────────────
+//
+// The blender doesn't introduce new colours: at paint time CanvasView
+// samples the canvas under each step and stores the colour into
+// stroke.pointColors. Here we paint each sampled colour as a soft
+// radial gradient stamp at low alpha — overlaying low-alpha
+// locally-sampled colour at every step is what produces the
+// "blends colours together" effect at boundaries.
+function renderBlender(
+	ctx: CanvasRenderingContext2D,
+	s: Stroke,
+	limit: number,
+): void {
+	const colors = s.pointColors;
+	if (!colors || colors.length === 0) return;
+	const pts = s.points;
+	const radius = s.size;
+	// Per-stamp alpha. s.opacity is the user-facing strength; we
+	// multiply by 0.35 so even at 100% the strokes layer gradually
+	// rather than slamming the underlying pixels.
+	const stampAlpha = Math.max(0, Math.min(1, s.opacity)) * 0.35;
+	ctx.globalCompositeOperation = "source-over";
+	for (let i = 0; i < limit; i += 2) {
+		const ci = i >> 1;
+		if (ci >= colors.length) break;
+		const packed = colors[ci];
+		// Sentinel for "sample failed" — skip silently.
+		if (packed < 0) continue;
+		const r = (packed >> 16) & 0xff;
+		const g = (packed >> 8) & 0xff;
+		const b = packed & 0xff;
+		const x = pts[i];
+		const y = pts[i + 1];
+		const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+		grad.addColorStop(0, `rgba(${r},${g},${b},${stampAlpha})`);
+		grad.addColorStop(0.6, `rgba(${r},${g},${b},${stampAlpha * 0.4})`);
+		grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+		ctx.fillStyle = grad;
+		ctx.beginPath();
+		ctx.arc(x, y, radius, 0, Math.PI * 2);
+		ctx.fill();
+	}
+}
+
 // ─── Bulk renderers ──────────────────────────────────────────
 
 export function totalPoints(strokes: Stroke[]): number {
@@ -442,5 +489,7 @@ export const TOOL_LIST: ToolType[] = [
 	"spray",
 	"airbrush",
 	"pixel",
+	"blender",
+	"eyedropper",
 	"eraser",
 ];

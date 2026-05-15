@@ -117,6 +117,16 @@ function EyedropperIcon() {
 		</svg>
 	);
 }
+function BlenderIcon() {
+	// Three nested arcs evoke a fingerprint-style smudge.
+	return (
+		<svg {...SVG_PROPS}>
+			<path d="M5 9 Q 12 4, 19 9" />
+			<path d="M4 13 Q 12 7.5, 20 13" opacity="0.85" />
+			<path d="M4 17 Q 12 11, 20 17" opacity="0.65" />
+		</svg>
+	);
+}
 function EraserIcon() {
 	return (
 		<svg {...SVG_PROPS}>
@@ -134,6 +144,7 @@ const TOOLS: Array<{ id: ToolType; label: string; icon: ReactNode }> = [
 	{ id: "spray", label: "Spray", icon: <SprayIcon /> },
 	{ id: "airbrush", label: "Airbrush", icon: <AirbrushIcon /> },
 	{ id: "pixel", label: "Pixel art", icon: <PixelArtIcon /> },
+	{ id: "blender", label: "Blender", icon: <BlenderIcon /> },
 	{ id: "eyedropper", label: "Pick color", icon: <EyedropperIcon /> },
 	{ id: "eraser", label: "Eraser", icon: <EraserIcon /> },
 ];
@@ -197,6 +208,7 @@ export default function Toolbar(props: Props) {
 	const isEraser = tool === "eraser";
 	const isPixel = tool === "pixel";
 	const isEyedropper = tool === "eyedropper";
+	const isBlender = tool === "blender";
 	const sizeMin = isEraser ? ERASER_SIZE_MIN : BRUSH_SIZE_MIN;
 	const sizeMax = isEraser ? ERASER_SIZE_MAX : BRUSH_SIZE_MAX;
 
@@ -231,7 +243,7 @@ export default function Toolbar(props: Props) {
 					onClick={() => setColorOpen((v) => !v)}
 					title="Color"
 					aria-label="Color"
-					disabled={isEraser || isEyedropper}
+					disabled={isEraser || isEyedropper || isBlender}
 				/>
 				<div className="tb__sliderGroup">
 					<span className="tb__sliderIcon">●</span>

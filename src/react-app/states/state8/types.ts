@@ -13,6 +13,7 @@ export type ToolType =
 	| "spray"
 	| "airbrush"
 	| "pixel"
+	| "blender"
 	| "eyedropper"
 	| "eraser";
 
@@ -24,6 +25,13 @@ export interface Stroke {
 	opacity: number; // 0..1
 	/** Flat interleaved [x0, y0, x1, y1, ...] for compactness. */
 	points: number[];
+	/**
+	 * Optional per-point colors as packed 0xRRGGBB ints. Length must
+	 * equal points.length / 2. Used by the blender brush, which samples
+	 * the canvas at each step and stores the colour rather than using
+	 * the brush's `color`. Other tools ignore this field.
+	 */
+	pointColors?: number[];
 }
 
 export interface Bbox {
