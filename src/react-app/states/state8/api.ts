@@ -31,6 +31,17 @@ export async function fetchOne(id: number): Promise<FullDrawing> {
 	return (await r.json()) as FullDrawing;
 }
 
+// Round stroke point coordinates to integers before sending. JSON.stringify
+// otherwise writes floats at full precision (e.g. "1234.5678901234567"),
+// which can balloon a busy session's payload 3-4×. Sub-pixel positioning is
+// invisible at world-pixel granularity, so this is lossless visually.
+function compactStrokes(strokes: Stroke[]): Stroke[] {
+	return strokes.map((s) => ({
+		...s,
+		points: s.points.map((p) => Math.round(p)),
+	}));
+}
+
 export async function submitDrawing(payload: {
 	name: string;
 	strokes: Stroke[];
@@ -43,7 +54,11 @@ export async function submitDrawing(payload: {
 	const r = await fetch(API_BASE, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ...payload, owner_secret: getOwnerSecret() }),
+		body: JSON.stringify({
+			...payload,
+			strokes: compactStrokes(payload.strokes),
+			owner_secret: getOwnerSecret(),
+		}),
 	});
 	if (!r.ok) {
 		const t = await r.text();
@@ -63,7 +78,11 @@ export async function updateDrawing(
 	const r = await fetch(`${API_BASE}/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ...payload, owner_secret: getOwnerSecret() }),
+		body: JSON.stringify({
+			...payload,
+			strokes: compactStrokes(payload.strokes),
+			owner_secret: getOwnerSecret(),
+		}),
 	});
 	if (!r.ok) {
 		const t = await r.text();

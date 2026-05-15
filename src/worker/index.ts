@@ -5,7 +5,14 @@ const app = new Hono<{ Bindings: Env }>();
 // ─────────────────────────────────────────────────────────────
 //  Limits + constants
 // ─────────────────────────────────────────────────────────────
-const MAX_STROKES_BYTES = 200_000; // 200 KB — covers chunky drawings
+// 950 KB. Capped just under Cloudflare D1's 1 MiB max row size so
+// any submission that fits this check is also guaranteed to INSERT
+// successfully — anything larger would otherwise pass validation
+// here and then fail at the database with a less friendly error.
+// In practice this is far more headroom than any drawing needs:
+// the client rounds stroke point coordinates to integers before
+// sending, which keeps even very dense sessions well under 200 KB.
+const MAX_STROKES_BYTES = 950_000;
 const MAX_NAME_LEN = 40;
 const MAX_REASON_LEN = 200;
 const DEFAULT_LIMIT = 200;
