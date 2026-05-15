@@ -27,6 +27,7 @@ type ToolType =
 	| "spray"
 	| "airbrush"
 	| "pixel"
+	| "blender"
 	| "eyedropper"
 	| "eraser";
 interface IncomingStroke {
