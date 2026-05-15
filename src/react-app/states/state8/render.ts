@@ -400,14 +400,15 @@ function renderPixel(
 	}
 }
 
-// ─── 11. Blender — soft, colourless smear ───────────────────
+// ─── 11. Blender — soft, colourless smear with cloud-shaped tip ──
 //
 // The blender doesn't introduce new colours: at paint time CanvasView
 // samples the canvas under each step and stores the colour into
-// stroke.pointColors. Here we paint each sampled colour as a soft
-// radial gradient stamp at low alpha — overlaying low-alpha
-// locally-sampled colour at every step is what produces the
-// "blends colours together" effect at boundaries.
+// stroke.pointColors. Here we stamp each sampled colour as a small
+// cluster of overlapping soft radial gradients with seeded jitter, so
+// the brush tip has irregular cloud-like edges instead of a clean
+// circle. Per-stamp randomness is seeded from the stamp's world coords
+// so the shape is stable across redraws and replays.
 function renderBlender(
 	ctx: CanvasRenderingContext2D,
 	s: Stroke,
@@ -417,11 +418,10 @@ function renderBlender(
 	if (!colors || colors.length === 0) return;
 	const pts = s.points;
 	const radius = s.size;
-	// Per-stamp alpha. s.opacity is the user-facing strength; we
-	// multiply by 0.35 so even at 100% the strokes layer gradually
-	// rather than slamming the underlying pixels.
 	const stampAlpha = Math.max(0, Math.min(1, s.opacity)) * 0.35;
 	ctx.globalCompositeOperation = "source-over";
+
+	const BLOBS = 5;
 	for (let i = 0; i < limit; i += 2) {
 		const ci = i >> 1;
 		if (ci >= colors.length) break;
@@ -433,14 +433,39 @@ function renderBlender(
 		const b = packed & 0xff;
 		const x = pts[i];
 		const y = pts[i + 1];
-		const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
-		grad.addColorStop(0, `rgba(${r},${g},${b},${stampAlpha})`);
-		grad.addColorStop(0.6, `rgba(${r},${g},${b},${stampAlpha * 0.4})`);
-		grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
-		ctx.fillStyle = grad;
-		ctx.beginPath();
-		ctx.arc(x, y, radius, 0, Math.PI * 2);
-		ctx.fill();
+
+		// Deterministic per-stamp RNG seeded from world coords so the
+		// cloud shape doesn't shimmer when the canvas redraws.
+		let seed = (((x | 0) * 73856093) ^ ((y | 0) * 19349663)) >>> 0;
+		if (seed === 0) seed = 1;
+		const rand = () => {
+			seed = (seed * 1664525 + 1013904223) >>> 0;
+			return seed / 0xffffffff;
+		};
+
+		// Lay down N overlapping soft blobs with jittered offset/size.
+		// Per-blob alpha is reduced so multiple overlaps build up to
+		// roughly the original single-stamp density at the centre while
+		// the edge gets the irregular cloud silhouette.
+		const perBlobAlpha = stampAlpha * 0.45;
+		for (let j = 0; j < BLOBS; j++) {
+			const ox = (rand() - 0.5) * radius * 0.85;
+			const oy = (rand() - 0.5) * radius * 0.85;
+			const subR = radius * (0.45 + rand() * 0.55);
+			const cx = x + ox;
+			const cy = y + oy;
+			const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, subR);
+			grad.addColorStop(0, `rgba(${r},${g},${b},${perBlobAlpha})`);
+			grad.addColorStop(
+				0.55,
+				`rgba(${r},${g},${b},${perBlobAlpha * 0.45})`,
+			);
+			grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+			ctx.fillStyle = grad;
+			ctx.beginPath();
+			ctx.arc(cx, cy, subR, 0, Math.PI * 2);
+			ctx.fill();
+		}
 	}
 }
 
