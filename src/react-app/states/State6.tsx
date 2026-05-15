@@ -14,7 +14,7 @@ import { PHOTO_B64 } from "./State6.photo";
 const VCARD = {
 	firstName: "Maximilian",
 	lastName: "Wikström",
-	organization: "DNB Bank ASA",
+	organization: "",
 	title: "", // e.g. "Software Engineer"
 	phone: "+46707360515",
 	email: "max.wik@icloud.com",
