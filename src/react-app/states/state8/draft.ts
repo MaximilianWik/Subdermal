@@ -28,7 +28,7 @@ export function loadDraft(): Draft | null {
 			strokes: d.strokes,
 			tool: (d.tool as ToolType) ?? "pen",
 			color: typeof d.color === "string" ? d.color : "#000000",
-			size: typeof d.size === "number" ? d.size : 6,
+			size: typeof d.size === "number" ? d.size : 10,
 			opacity: typeof d.opacity === "number" ? d.opacity : 1,
 			name: typeof d.name === "string" ? d.name : "",
 			instagram: typeof d.instagram === "string" ? d.instagram : "",

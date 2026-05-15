@@ -219,6 +219,10 @@ export default function Detail({ drawing, onClose, onHidden, onEdit }: Props) {
 								: null
 						}
 					/>
+					<MetaRow
+						label="Size"
+						value={`${dWidth}×${dHeight}`}
+					/>
 					<MetaRow label="Time spent" value={drawTime} />
 					<MetaRow label="Lang" value={drawing.accept_language} mono />
 					<MetaRow

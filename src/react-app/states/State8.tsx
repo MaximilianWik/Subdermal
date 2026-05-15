@@ -96,7 +96,7 @@ export default function State8() {
 		const prev = prevToolRef.current;
 		setTool(prev === "eyedropper" ? "pen" : prev);
 	};
-	const [size, setSize] = useState<number>(6);
+	const [size, setSize] = useState<number>(10);
 	const [opacity, setOpacity] = useState<number>(1);
 	const [draftName, setDraftName] = useState<string>("");
 	const [draftInstagram, setDraftInstagram] = useState<string>("");

@@ -78,11 +78,11 @@ export interface FullDrawing extends FeedDrawing {
 export const WORLD_W = 16384;
 export const WORLD_H = 24576;
 
-// Initial viewport size shown at zoom = 1 (in world px). Doubled
-// from the prior 1024×1536 so a fresh load lands the user 2x further
-// out — more of the canvas is visible at the start.
-export const INITIAL_VIEW_W = 2048;
-export const INITIAL_VIEW_H = 3072;
+// Initial viewport size shown at zoom = 1 (in world px). Smaller
+// values mean the user lands more zoomed-in on first load (less of
+// the world is visible at the start).
+export const INITIAL_VIEW_W = 1024;
+export const INITIAL_VIEW_H = 1536;
 
 // Brush size limits (in world px at zoom 1)
 export const BRUSH_SIZE_MIN = 1;
