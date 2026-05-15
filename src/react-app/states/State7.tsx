@@ -14,11 +14,23 @@ import "./State7.css";
 
 type Phase = "terminal" | "glitch" | "reveal";
 
-const TIMELINE: Array<{ phase: Phase; at: number }> = [
-	{ phase: "terminal", at: 0 },
-	{ phase: "glitch", at: 4100 },
-	{ phase: "reveal", at: 5500 },
-];
+// ─── TEMP: terminal & reveal phases disabled ────────────────
+//
+// Only the glitch phase plays. To restore the full cinematic:
+//   1. Restore TIMELINE_FULL below (replace TIMELINE with it).
+//   2. Change useState<Phase>("glitch") back to "terminal".
+//   3. Restore the timeline-walking useEffect (commented further down)
+//      and remove the glitch-only setTimeout.
+//
+// Original timeline (kept for easy revert):
+//   { phase: "terminal", at: 0 },
+//   { phase: "glitch",   at: 4100 },
+//   { phase: "reveal",   at: 5500 },
+
+// Glitch phase duration in ms (was ~1.4s, from 4100→5500 in the
+// original timeline). When this elapses the intro exits via
+// onComplete instead of advancing to the reveal phase.
+const GLITCH_DURATION_MS = 1400;
 
 // All 14 images in /public/glitch, in filename order.
 // They get shuffled per scan so each viewer sees a different sequence.
@@ -40,7 +52,11 @@ const GLITCH_IMAGES = [
 ];
 
 export default function State7({ onComplete }: { onComplete?: () => void } = {}) {
-	const [phase, setPhase] = useState<Phase>("terminal");
+	// TEMP: phase is locked to "glitch" — no setPhase call, so the
+	// terminal and reveal JSX branches further down never render.
+	// To re-enable the full cinematic, change "glitch" back to
+	// "terminal" and restore the timeline-walking useEffect below.
+	const [phase] = useState<Phase>("glitch");
 
 	// Preload glitch images on mount so they're already in cache when
 	// the glitch phase fires at 6.2s — otherwise the first few frames
@@ -52,12 +68,27 @@ export default function State7({ onComplete }: { onComplete?: () => void } = {})
 		}
 	}, []);
 
+	// TEMP: glitch-only exit timer. Replaces the timeline-walking
+	// timer that advanced terminal → glitch → reveal. To restore the
+	// full intro, remove this block and uncomment the one below it.
 	useEffect(() => {
-		const timers = TIMELINE.slice(1).map(({ phase: p, at }) =>
-			setTimeout(() => setPhase(p), at),
-		);
-		return () => timers.forEach(clearTimeout);
-	}, []);
+		if (!onComplete) return;
+		const id = setTimeout(onComplete, GLITCH_DURATION_MS);
+		return () => clearTimeout(id);
+	}, [onComplete]);
+
+	// Original timer — restore to re-enable terminal + reveal phases:
+	// useEffect(() => {
+	// 	const TIMELINE: Array<{ phase: Phase; at: number }> = [
+	// 		{ phase: "terminal", at: 0 },
+	// 		{ phase: "glitch", at: 4100 },
+	// 		{ phase: "reveal", at: 5500 },
+	// 	];
+	// 	const timers = TIMELINE.slice(1).map(({ phase: p, at }) =>
+	// 		setTimeout(() => setPhase(p), at),
+	// 	);
+	// 	return () => timers.forEach(clearTimeout);
+	// }, []);
 
 	return (
 		<div className="s7">
