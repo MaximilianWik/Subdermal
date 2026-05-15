@@ -27,6 +27,8 @@ import type {
 import {
 	BRUSH_SIZE_MAX,
 	BRUSH_SIZE_MIN,
+	ERASER_SIZE_MAX,
+	ERASER_SIZE_MIN,
 	WORLD_H,
 	WORLD_W,
 } from "./state8/types";
@@ -69,6 +71,18 @@ export default function State8() {
 	const handleSetTool = (next: ToolType) => {
 		if (next === "eyedropper" && tool !== "eyedropper") {
 			prevToolRef.current = tool;
+		}
+		// Clamp size into the new tool's allowed range so e.g. switching
+		// from a 1-px pen to the eraser doesn't leave the eraser at a
+		// sub-minimum radius (which silently makes it look broken).
+		if (next === "eraser") {
+			setSize((s) =>
+				Math.max(ERASER_SIZE_MIN, Math.min(ERASER_SIZE_MAX, s)),
+			);
+		} else if (next !== "pixel" && next !== "eyedropper") {
+			setSize((s) =>
+				Math.max(BRUSH_SIZE_MIN, Math.min(BRUSH_SIZE_MAX, s)),
+			);
 		}
 		setTool(next);
 	};

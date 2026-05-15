@@ -582,33 +582,68 @@ export default function CanvasView({
 	// committed drawings in `existing` are untouchable.
 	const eraseAt = (wx: number, wy: number) => {
 		const r = size;
-		const r2 = r * r;
 		const live = liveStrokesRef.current;
 		let mutated = false;
 		const next: Stroke[] = [];
 
 		for (const s of live) {
 			const pts = s.points;
+			const colors = s.pointColors;
+
+			// Account for the stroke's visible footprint, not just its
+			// stored sample points. For pixel cells the sample point is
+			// the cell's top-left, and the cell extends PIXEL_CELL in
+			// both directions — use the cell centre and half-diagonal
+			// so the eraser hits anywhere visible inside the cell.
+			let strokeR: number;
+			let centerOffset: number;
+			if (s.tool === "pixel") {
+				strokeR = PIXEL_CELL * 0.7071; // half-diagonal ≈ 22.6
+				centerOffset = PIXEL_CELL / 2;
+			} else {
+				strokeR = Math.max(0.5, s.size / 2);
+				centerOffset = 0;
+			}
+			const effR = r + strokeR;
+			const effR2 = effR * effR;
+
 			let hadHit = false;
-			let cur: number[] = [];
+			let pushedAny = false;
+			let curPts: number[] = [];
+			let curCols: number[] = [];
+
 			const flush = () => {
-				if (cur.length >= 2) next.push({ ...s, points: cur });
-				cur = [];
+				if (curPts.length >= 2) {
+					const sub: Stroke = { ...s, points: curPts };
+					// Keep pointColors in sync with the sliced points so
+					// blender strokes still render correctly after a split.
+					if (colors) sub.pointColors = curCols;
+					next.push(sub);
+					pushedAny = true;
+				}
+				curPts = [];
+				curCols = [];
 			};
+
 			for (let i = 0; i < pts.length; i += 2) {
-				const dx = pts[i] - wx;
-				const dy = pts[i + 1] - wy;
-				if (dx * dx + dy * dy > r2) {
-					cur.push(pts[i], pts[i + 1]);
+				const cx = pts[i] + centerOffset;
+				const cy = pts[i + 1] + centerOffset;
+				const dx = cx - wx;
+				const dy = cy - wy;
+				if (dx * dx + dy * dy > effR2) {
+					curPts.push(pts[i], pts[i + 1]);
+					if (colors) curCols.push(colors[i >> 1]);
 				} else {
 					hadHit = true;
 					flush();
 				}
 			}
 			flush();
+
 			if (!hadHit) {
-				// Stroke wasn't touched at all — preserve original reference
-				next.pop();
+				// Stroke wasn't touched at all — restore the original
+				// reference so React can shallow-compare cheaply.
+				if (pushedAny) next.pop();
 				next.push(s);
 			} else {
 				mutated = true;
