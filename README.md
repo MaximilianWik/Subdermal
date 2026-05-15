@@ -1,5 +1,7 @@
 # Subdermal — QR Code Domain
 
+**LIVE:** https://max-wik.com/
+
 A React single-page application deployed as a Cloudflare Worker, with a Hono-powered API backend running at the edge.
 
 The page is reached via QR code (tattooed on a real arm) and is designed for **fast state switching** — change a single number in `state.ts` and Cloudflare auto-deploys a new look. Editable directly from the GitHub mobile app.
