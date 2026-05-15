@@ -13,7 +13,7 @@ interface Props {
 	onEdit?: (drawing: FullDrawing) => void;
 }
 
-const REPLAY_DURATION_MS = 2200;
+const REPLAY_DURATION_MS = 4000;
 const REPLAY_MIN_POINTS_PER_FRAME = 1;
 
 export default function Detail({ drawing, onClose, onHidden, onEdit }: Props) {
