@@ -1,14 +1,21 @@
-import type { Stroke, ToolType } from "./types";
+import type { Stroke } from "./types";
 import { PIXEL_CELL } from "./types";
 
 // ─────────────────────────────────────────────────────────────
-//  Stroke rendering — 10 brush types, each visually distinct.
+//  Stroke rendering. One renderer per ToolType variant.
 //
 //  Coordinates are WORLD pixels. The caller is expected to have
 //  already applied the pan/zoom transform to the canvas context.
 //
 //  All randomness is deterministic per stroke (seeded from the
-//  first point), so replays look identical to the live draw.
+//  first point or from per-point world coords), so replays look
+//  identical to the live draw on any device or zoom level.
+//
+//  The pencil / marker / brush / charcoal renderers are kept even
+//  though those tools are no longer in the toolbar palette: existing
+//  drawings in the database may still reference them, and the
+//  renderer is what guarantees those drawings continue to display
+//  correctly. Removing them here would silently break old work.
 // ─────────────────────────────────────────────────────────────
 
 /**
@@ -538,19 +545,3 @@ export function drawStrokes(
 ): void {
 	for (const s of strokes) drawStroke(ctx, s);
 }
-
-export const TOOL_LIST: ToolType[] = [
-	"pen",
-	"pencil",
-	"marker",
-	"brush",
-	"charcoal",
-	"watercolor",
-	"calligraphy",
-	"spray",
-	"airbrush",
-	"pixel",
-	"blender",
-	"eyedropper",
-	"eraser",
-];

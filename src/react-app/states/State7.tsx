@@ -58,9 +58,9 @@ export default function State7({ onComplete }: { onComplete?: () => void } = {})
 	// "terminal" and restore the timeline-walking useEffect below.
 	const [phase] = useState<Phase>("glitch");
 
-	// Preload glitch images on mount so they're already in cache when
-	// the glitch phase fires at 6.2s — otherwise the first few frames
-	// would just be blank while the network fetches.
+	// Preload glitch images on mount so they're already in cache by
+	// the time the glitch phase fires — otherwise the first few
+	// frames would just be blank while the network fetches.
 	useEffect(() => {
 		for (const src of GLITCH_IMAGES) {
 			const img = new Image();

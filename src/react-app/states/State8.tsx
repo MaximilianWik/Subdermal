@@ -44,11 +44,14 @@ import {
 //    "view"  — pan/zoom, tap a drawing to open its detail card
 //    "draw"  — tools toolbar visible, taps draw, two-finger pinch/pan
 //
-//  Submitting requires a name. After submit, the canvas re-fetches
-//  so the new piece appears on the world canvas.
+//  Submitting requires a name (Instagram handle is optional). After
+//  submit the canvas re-fetches so the new piece appears on the world
+//  canvas. The browser also remembers the drawing's id locally so the
+//  artist can come back later and edit it.
 //
-//  Admin mode: append ?admin=<token> matching the Workers secret —
-//  detail card gets Hide / Ban IP buttons.
+//  Admin mode: append ?admin=<token> matching the Workers secret.
+//  Detail card gets Hide / Ban IP buttons; the topbar gets a Bans
+//  pill that opens the live banned-IPs list.
 // ─────────────────────────────────────────────────────────────
 
 type Mode = "view" | "draw";
