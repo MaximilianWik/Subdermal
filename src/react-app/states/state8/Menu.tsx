@@ -34,6 +34,11 @@ const ITEMS: MenuItem[] = [
 		href: "https://www.instagram.com/max_wik/",
 		external: true,
 	},
+	{
+		label: "Source Code",
+		href: "https://github.com/MaximilianWik/Cloudflare-Domain",
+		external: true,
+	},
 	{ label: "Girlfriend ❤", view: 2 },
 	{ label: "Contact Card", view: 6 },
 	{ label: "Jonte", view: 5 },
