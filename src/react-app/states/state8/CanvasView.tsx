@@ -67,6 +67,7 @@ export default function CanvasView({
 	const canvasElRef = useRef<HTMLCanvasElement>(null);
 	const eraserCursorRef = useRef<HTMLDivElement>(null);
 	const dropperCursorRef = useRef<HTMLDivElement>(null);
+	const blenderCursorRef = useRef<HTMLDivElement>(null);
 
 	// View transform: world (wx, wy) -> screen (sx, sy)
 	//   sx = wx * zoom + view.x
@@ -756,6 +757,35 @@ export default function CanvasView({
 		}
 	}, [mode, tool]);
 
+	// ─── Blender hover cursor ───────────────────────────────
+	// Same pattern as the eraser preview: a circle the size of the
+	// brush radius that follows the pointer, so the user can see
+	// where the cloud-shaped stamps are about to land.
+	const updateBlenderCursor = (
+		sx: number,
+		sy: number,
+		visible: boolean,
+	) => {
+		const el = blenderCursorRef.current;
+		if (!el) return;
+		const showing = mode === "draw" && tool === "blender" && visible;
+		el.style.display = showing ? "block" : "none";
+		if (!showing) return;
+		const v = viewRef.current;
+		const diameter = size * v.zoom * 2;
+		el.style.left = `${sx}px`;
+		el.style.top = `${sy}px`;
+		el.style.width = `${diameter}px`;
+		el.style.height = `${diameter}px`;
+	};
+
+	useEffect(() => {
+		if (mode !== "draw" || tool !== "blender") {
+			const el = blenderCursorRef.current;
+			if (el) el.style.display = "none";
+		}
+	}, [mode, tool]);
+
 	// ─── Mouse wheel zoom (desktop) ─────────────────────────
 	const handleWheel = (e: React.WheelEvent) => {
 		e.preventDefault();
@@ -801,6 +831,10 @@ export default function CanvasView({
 				if (mode === "draw" && tool === "eyedropper") {
 					updateDropperCursor(sx, sy, true);
 				}
+				// Show blender hover preview so the brush size is visible.
+				if (mode === "draw" && tool === "blender") {
+					updateBlenderCursor(sx, sy, true);
+				}
 			}}
 			onPointerUp={handlePointerUp}
 			onPointerCancel={handlePointerUp}
@@ -808,6 +842,8 @@ export default function CanvasView({
 				updateEraserCursor(0, 0, false);
 				const dEl = dropperCursorRef.current;
 				if (dEl) dEl.style.display = "none";
+				const bEl = blenderCursorRef.current;
+				if (bEl) bEl.style.display = "none";
 			}}
 			onWheel={handleWheel}
 		>
@@ -820,6 +856,11 @@ export default function CanvasView({
 			<div
 				ref={dropperCursorRef}
 				className="cv__dropperCursor"
+				aria-hidden
+			/>
+			<div
+				ref={blenderCursorRef}
+				className="cv__blenderCursor"
 				aria-hidden
 			/>
 		</div>
