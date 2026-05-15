@@ -209,6 +209,49 @@ export default function State8() {
 		setDraftStrokes(next);
 	};
 
+	// ─── Keyboard shortcuts (Ctrl/Cmd+Z = undo, Ctrl/Cmd+Shift+Z
+	//     or Ctrl+Y = redo) ──────────────────────────────────
+	//
+	// Refs hold the latest handlers + gating state so the listener
+	// can be registered exactly once without going stale.
+	const undoRef = useRef(handleUndo);
+	const redoRef = useRef(handleRedo);
+	undoRef.current = handleUndo;
+	redoRef.current = handleRedo;
+
+	const shortcutBlockedRef = useRef(false);
+	shortcutBlockedRef.current =
+		mode !== "draw" ||
+		signOpen ||
+		detail !== null ||
+		bansOpen ||
+		mineOpen ||
+		menuOpen ||
+		rulesOpen;
+
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if (!(e.ctrlKey || e.metaKey)) return;
+			const key = e.key.toLowerCase();
+			if (key !== "z" && key !== "y") return;
+			if (shortcutBlockedRef.current) return;
+
+			// Don't hijack native undo/redo from text fields
+			const t = e.target as HTMLElement | null;
+			const tag = t?.tagName;
+			if (tag === "INPUT" || tag === "TEXTAREA" || t?.isContentEditable) {
+				return;
+			}
+
+			const isRedo = key === "y" || (key === "z" && e.shiftKey);
+			e.preventDefault();
+			if (isRedo) redoRef.current();
+			else undoRef.current();
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, []);
+
 	// ─── Mode toggle ────────────────────────────────────────
 	const enterDraw = () => {
 		setMode("draw");
