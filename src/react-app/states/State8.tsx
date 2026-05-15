@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./State8.css";
 import type { CanvasViewHandle } from "./state8/CanvasView";
 import CanvasView from "./state8/CanvasView";
@@ -393,6 +393,20 @@ export default function State8() {
 	const hasStrokes = draftStrokes.length > 0;
 	const admin = isAdminMode();
 
+	// Estimate the on-wire payload size so the toolbar can show a
+	// budget bar against the worker's MAX_STROKES_BYTES cap. Uses the
+	// same integer-rounded points api.ts compactStrokes() will use,
+	// so the number matches what actually gets POSTed. Recomputes on
+	// every stroke commit (cheap; only runs when draftStrokes change).
+	const payloadBytes = useMemo(() => {
+		const compact = draftStrokes.map((s) => ({
+			...s,
+			points: s.points.map((p) => Math.round(p)),
+		}));
+		return JSON.stringify(compact).length;
+	}, [draftStrokes]);
+	const PAYLOAD_CAP = 950_000;
+
 	return (
 		<div className="s8">
 			<CanvasView
@@ -493,6 +507,8 @@ export default function State8() {
 					onResetView={() => canvasHandleRef.current?.resetView()}
 					onClear={handleClear}
 					hasStrokes={hasStrokes}
+					payloadBytes={payloadBytes}
+					payloadCap={PAYLOAD_CAP}
 				/>
 			)}
 

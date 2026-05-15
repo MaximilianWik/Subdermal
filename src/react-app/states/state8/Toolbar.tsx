@@ -27,6 +27,8 @@ interface Props {
 	onResetView: () => void;
 	onClear: () => void;
 	hasStrokes: boolean;
+	payloadBytes: number;
+	payloadCap: number;
 }
 
 // ─── Icons ───────────────────────────────────────────────────
@@ -200,6 +202,8 @@ export default function Toolbar(props: Props) {
 		onResetView,
 		onClear,
 		hasStrokes,
+		payloadBytes,
+		payloadCap,
 	} = props;
 
 	const [colorOpen, setColorOpen] = useState(false);
@@ -221,6 +225,7 @@ export default function Toolbar(props: Props) {
 
 	return (
 		<div className="tb">
+			<BudgetBar bytes={payloadBytes} cap={payloadCap} />
 			<div className="tb__row tb__row--tools">
 				{TOOLS.map((t) => (
 					<button
@@ -344,6 +349,38 @@ export default function Toolbar(props: Props) {
 					</button>
 				</div>
 			)}
+		</div>
+	);
+}
+
+// ─── Budget bar ──────────────────────────────────────────────
+//
+// Shows how much of the on-wire payload cap the current draft is
+// using. Tone ramps from neutral → warning → danger as it fills.
+function BudgetBar({ bytes, cap }: { bytes: number; cap: number }) {
+	const ratio = Math.min(1, Math.max(0, bytes / cap));
+	const pct = Math.round(ratio * 100);
+	const kb = Math.round(bytes / 1024);
+	const capKb = Math.round(cap / 1024);
+	let tone = "";
+	if (ratio > 0.9) tone = "tb__budgetFill--danger";
+	else if (ratio > 0.7) tone = "tb__budgetFill--warn";
+	const overCap = bytes > cap;
+	return (
+		<div className="tb__row tb__row--budget" aria-label="Drawing size">
+			<div className="tb__budgetLabel">
+				<span>Used</span>
+				<span className={`tb__budgetVal ${overCap ? "tb__budgetVal--danger" : ""}`}>
+					{kb} / {capKb} KB
+					<span className="tb__budgetPct"> · {pct}%</span>
+				</span>
+			</div>
+			<div className="tb__budgetTrack">
+				<div
+					className={`tb__budgetFill ${tone}`}
+					style={{ width: `${ratio * 100}%` }}
+				/>
+			</div>
 		</div>
 	);
 }
