@@ -68,6 +68,7 @@ export default function CanvasView({
 	const eraserCursorRef = useRef<HTMLDivElement>(null);
 	const dropperCursorRef = useRef<HTMLDivElement>(null);
 	const blenderCursorRef = useRef<HTMLDivElement>(null);
+	const brushCursorRef = useRef<HTMLDivElement>(null);
 
 	// View transform: world (wx, wy) -> screen (sx, sy)
 	//   sx = wx * zoom + view.x
@@ -288,6 +289,8 @@ export default function CanvasView({
 			dropperHexRef.current = null;
 			const dEl = dropperCursorRef.current;
 			if (dEl) dEl.style.display = "none";
+			const brEl = brushCursorRef.current;
+			if (brEl) brEl.style.display = "none";
 			scheduleDraw();
 			return;
 		}
@@ -786,6 +789,97 @@ export default function CanvasView({
 		}
 	}, [mode, tool]);
 
+	// ─── Brush hover cursor ─────────────────────────────────
+	// Generic preview that adapts to the active brush so the user can
+	// see the actual footprint before they tap. One DOM element with a
+	// className modifier per tool — circles for pen/watercolor/airbrush
+	// at each renderer's real diameter, an angled chisel for calligraphy
+	// matching tipAngle = 45°, and a grid-snapped square for pixel-art.
+	const updateBrushCursor = (
+		sx: number,
+		sy: number,
+		visible: boolean,
+	) => {
+		const el = brushCursorRef.current;
+		if (!el) return;
+		const isBrushPreview =
+			tool === "pen" ||
+			tool === "watercolor" ||
+			tool === "airbrush" ||
+			tool === "calligraphy" ||
+			tool === "pixel";
+		const showing = mode === "draw" && visible && isBrushPreview;
+		if (!showing) {
+			el.style.display = "none";
+			return;
+		}
+		el.style.display = "block";
+		el.className = `cv__brushCursor cv__brushCursor--${tool}`;
+		const v = viewRef.current;
+
+		if (tool === "pixel") {
+			// Snap to the minor-grid cell the pointer is in and place a
+			// square at that cell's top-left in screen coords. No
+			// translate(-50%,-50%) — the square IS the cell, not centred
+			// on the pointer.
+			const wx = (sx - v.x) / v.zoom;
+			const wy = (sy - v.y) / v.zoom;
+			const cellWX = Math.floor(wx / PIXEL_CELL) * PIXEL_CELL;
+			const cellWY = Math.floor(wy / PIXEL_CELL) * PIXEL_CELL;
+			const screenX = cellWX * v.zoom + v.x;
+			const screenY = cellWY * v.zoom + v.y;
+			const cellPx = PIXEL_CELL * v.zoom;
+			el.style.transform = "none";
+			el.style.left = `${screenX}px`;
+			el.style.top = `${screenY}px`;
+			el.style.width = `${cellPx}px`;
+			el.style.height = `${cellPx}px`;
+			return;
+		}
+
+		if (tool === "calligraphy") {
+			// Chisel rectangle, long axis perpendicular to renderer's
+			// tipAngle (= 45°). Width matches the maximum quad width
+			// renderCalligraphy can produce; height is a thin tip.
+			const w = size * 1.15 * v.zoom;
+			const h = Math.max(2, size * 0.32 * v.zoom);
+			el.style.transform = "translate(-50%, -50%) rotate(-45deg)";
+			el.style.left = `${sx}px`;
+			el.style.top = `${sy}px`;
+			el.style.width = `${w}px`;
+			el.style.height = `${h}px`;
+			return;
+		}
+
+		// Circle previews — diameter matches each renderer's footprint:
+		//   pen        : ctx.lineWidth = s.size            → diameter = size
+		//   watercolor : lineWidth = s.size * 1.4          → diameter = size * 1.4
+		//   airbrush   : ctx.arc(..., s.size, ...)         → diameter = size * 2
+		let mul = 1;
+		if (tool === "watercolor") mul = 1.4;
+		else if (tool === "airbrush") mul = 2;
+		const diameter = size * v.zoom * mul;
+		el.style.transform = "translate(-50%, -50%)";
+		el.style.left = `${sx}px`;
+		el.style.top = `${sy}px`;
+		el.style.width = `${diameter}px`;
+		el.style.height = `${diameter}px`;
+	};
+
+	useEffect(() => {
+		const showsBrushCursor =
+			mode === "draw" &&
+			(tool === "pen" ||
+				tool === "watercolor" ||
+				tool === "airbrush" ||
+				tool === "calligraphy" ||
+				tool === "pixel");
+		if (!showsBrushCursor) {
+			const el = brushCursorRef.current;
+			if (el) el.style.display = "none";
+		}
+	}, [mode, tool]);
+
 	// ─── Mouse wheel zoom (desktop) ─────────────────────────
 	const handleWheel = (e: React.WheelEvent) => {
 		e.preventDefault();
@@ -835,6 +929,8 @@ export default function CanvasView({
 				if (mode === "draw" && tool === "blender") {
 					updateBlenderCursor(sx, sy, true);
 				}
+				// Show generic brush preview for the remaining shape-bearing tools.
+				updateBrushCursor(sx, sy, true);
 			}}
 			onPointerUp={handlePointerUp}
 			onPointerCancel={handlePointerUp}
@@ -844,6 +940,8 @@ export default function CanvasView({
 				if (dEl) dEl.style.display = "none";
 				const bEl = blenderCursorRef.current;
 				if (bEl) bEl.style.display = "none";
+				const brEl = brushCursorRef.current;
+				if (brEl) brEl.style.display = "none";
 			}}
 			onWheel={handleWheel}
 		>
@@ -871,6 +969,11 @@ export default function CanvasView({
 					<path d={BLENDER_PREVIEW_PATH} />
 				</svg>
 			</div>
+			<div
+				ref={brushCursorRef}
+				className="cv__brushCursor"
+				aria-hidden
+			/>
 		</div>
 	);
 }
