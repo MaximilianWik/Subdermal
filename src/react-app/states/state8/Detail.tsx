@@ -31,6 +31,12 @@ export default function Detail({ drawing, onClose, onHidden, onEdit }: Props) {
 	const dWidth = Math.max(1, bbox.x2 - bbox.x1);
 	const dHeight = Math.max(1, bbox.y2 - bbox.y1);
 
+	// On-disk storage size of this drawing, in bytes — re-serialise
+	// the strokes JSON, same minification the worker stores. Shown
+	// in the metadata grid as a human-readable KB/MB string.
+	const storageBytes = JSON.stringify(drawing.strokes).length;
+	const storageSize = formatBytes(storageBytes);
+
 	// ─── Replay animation ───────────────────────────────────
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -221,7 +227,7 @@ export default function Detail({ drawing, onClose, onHidden, onEdit }: Props) {
 					/>
 					<MetaRow
 						label="Size"
-						value={`${dWidth}×${dHeight}`}
+						value={storageSize}
 					/>
 					<MetaRow label="Time spent" value={drawTime} />
 					<MetaRow label="Lang" value={drawing.accept_language} mono />
@@ -297,6 +303,12 @@ function formatDrawTime(ms: number): string {
 	const m = Math.floor(ms / 60000);
 	const s = Math.floor((ms % 60000) / 1000);
 	return `${m}m ${s}s`;
+}
+
+function formatBytes(b: number): string {
+	if (b < 1024) return `${b} B`;
+	if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+	return `${(b / (1024 * 1024)).toFixed(2)} MB`;
 }
 
 function InstagramIcon() {
