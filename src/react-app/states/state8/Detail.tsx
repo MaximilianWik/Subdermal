@@ -226,6 +226,10 @@ export default function Detail({ drawing, onClose, onHidden, onEdit }: Props) {
 						}
 					/>
 					<MetaRow
+						label="Strokes"
+						value={String(drawing.strokes.length)}
+					/>
+					<MetaRow
 						label="Size"
 						value={storageSize}
 					/>
