@@ -136,9 +136,19 @@
 	font-weight: 600;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
+	transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 .dm__like:disabled {
 	opacity: 0.5;
+}
+.dm__like--on {
+	background: linear-gradient(135deg, #ff5a82 0%, #ff7a52 100%);
+	border-color: rgba(255, 120, 100, 0.5);
+	color: #ffffff;
+	box-shadow: 0 2px 12px rgba(255, 90, 130, 0.4);
+}
+.dm__like--on:hover:not(:disabled) {
+	filter: brightness(1.05);
 }
 
 .dm__edit {

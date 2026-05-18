@@ -97,3 +97,49 @@ export function forgetMyDrawing(id: number): void {
 export function isMyDrawing(id: number): boolean {
 	return readMyIds().includes(id);
 }
+
+// ─── Liked drawings ─────────────────────────────────────────
+//
+// The server enforces one like per browser per drawing via the likes
+// table; this localStorage list mirrors that state so the UI can show
+// the heart already filled before the first round-trip. After every
+// toggle, rewrite this list from the server's authoritative `liked`
+// response so it self-corrects if the user clears storage and re-likes.
+
+const LIKED_KEY = "state8.likedDrawings.v1";
+
+function readLikedIds(): number[] {
+	try {
+		const raw = localStorage.getItem(LIKED_KEY);
+		if (!raw) return [];
+		const v = JSON.parse(raw) as unknown;
+		if (!Array.isArray(v)) return [];
+		return v.filter((x): x is number => typeof x === "number");
+	} catch {
+		return [];
+	}
+}
+
+function writeLikedIds(ids: number[]): void {
+	try {
+		localStorage.setItem(LIKED_KEY, JSON.stringify(ids.slice(-2000)));
+	} catch {
+		/* ignore */
+	}
+}
+
+export function hasLiked(id: number): boolean {
+	return readLikedIds().includes(id);
+}
+
+export function rememberLike(id: number): void {
+	const cur = readLikedIds();
+	if (cur.includes(id)) return;
+	cur.push(id);
+	writeLikedIds(cur);
+}
+
+export function forgetLike(id: number): void {
+	const cur = readLikedIds().filter((x) => x !== id);
+	writeLikedIds(cur);
+}

@@ -518,21 +518,71 @@ app.patch("/api/drawings/:id", async (c) => {
 	return c.json({ ok: true });
 });
 
-// POST /api/drawings/:id/like — heart button
+// POST /api/drawings/:id/like — heart button (toggle)
+//
+// Each browser identifies itself with the same owner_secret used for
+// edits. The likes table enforces one row per (drawing_id, liker), so
+// repeat clicks toggle the like off and back on instead of inflating
+// the counter. drawings.likes is kept in lockstep.
 app.post("/api/drawings/:id/like", async (c) => {
 	const id = parseInt(c.req.param("id"), 10);
 	if (!Number.isFinite(id)) return c.json({ error: "bad id" }, 400);
-	await c.env.DB.prepare(
-		`UPDATE drawings SET likes = likes + 1 WHERE id = ? AND hidden = 0`,
+
+	let body: { owner_secret?: string };
+	try {
+		body = (await c.req.json()) as { owner_secret?: string };
+	} catch {
+		return c.json({ error: "invalid json" }, 400);
+	}
+	const liker =
+		typeof body.owner_secret === "string" && body.owner_secret.length >= 16
+			? body.owner_secret.slice(0, 128)
+			: null;
+	if (!liker) return c.json({ error: "owner_secret required" }, 400);
+
+	const exists = await c.env.DB.prepare(
+		`SELECT drawing_id FROM drawings WHERE id = ? AND hidden = 0`,
 	)
 		.bind(id)
+		.first<{ drawing_id: number }>();
+	if (!exists) return c.json({ error: "not found" }, 404);
+
+	// Try removing first — if the row existed, it's a toggle-off.
+	const del = await c.env.DB.prepare(
+		`DELETE FROM likes WHERE drawing_id = ? AND liker = ?`,
+	)
+		.bind(id, liker)
 		.run();
+
+	let liked: boolean;
+	if (del.meta.changes && del.meta.changes > 0) {
+		await c.env.DB.prepare(
+			`UPDATE drawings SET likes = MAX(0, likes - 1) WHERE id = ?`,
+		)
+			.bind(id)
+			.run();
+		liked = false;
+	} else {
+		await c.env.DB.prepare(
+			`INSERT INTO likes (drawing_id, liker, liked_at) VALUES (?, ?, ?)
+			 ON CONFLICT (drawing_id, liker) DO NOTHING`,
+		)
+			.bind(id, liker, Date.now())
+			.run();
+		await c.env.DB.prepare(
+			`UPDATE drawings SET likes = likes + 1 WHERE id = ? AND hidden = 0`,
+		)
+			.bind(id)
+			.run();
+		liked = true;
+	}
+
 	const row = await c.env.DB.prepare(
 		`SELECT likes FROM drawings WHERE id = ?`,
 	)
 		.bind(id)
 		.first<{ likes: number }>();
-	return c.json({ likes: row?.likes ?? 0 });
+	return c.json({ likes: row?.likes ?? 0, liked });
 });
 
 // ─── Admin endpoints ─────────────────────────────────────────

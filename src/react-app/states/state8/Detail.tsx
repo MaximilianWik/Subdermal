@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FullDrawing } from "./types";
 import { drawStrokesProgressive, totalPoints } from "./render";
 import { adminBan, adminHide, isAdminMode, likeDrawing } from "./api";
-import { isMyDrawing } from "./owner";
+import { forgetLike, hasLiked, isMyDrawing, rememberLike } from "./owner";
 import { instagramUrl } from "./instagram";
 import "./Detail.css";
 
@@ -19,6 +19,7 @@ const REPLAY_MIN_POINTS_PER_FRAME = 1;
 export default function Detail({ drawing, onClose, onHidden, onEdit }: Props) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [likes, setLikes] = useState(drawing.likes ?? 0);
+	const [liked, setLiked] = useState(() => hasLiked(drawing.id));
 	const [liking, setLiking] = useState(false);
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -100,6 +101,9 @@ export default function Detail({ drawing, onClose, onHidden, onEdit }: Props) {
 		try {
 			const r = await likeDrawing(drawing.id);
 			setLikes(r.likes);
+			setLiked(r.liked);
+			if (r.liked) rememberLike(drawing.id);
+			else forgetLike(drawing.id);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "like failed");
 		} finally {
@@ -161,9 +165,10 @@ export default function Detail({ drawing, onClose, onHidden, onEdit }: Props) {
 
 				<div className="dm__likeRow">
 					<button
-						className="dm__like"
+						className={`dm__like ${liked ? "dm__like--on" : ""}`}
 						onClick={handleLike}
 						disabled={liking}
+						aria-pressed={liked}
 					>
 						♥ {likes}
 					</button>

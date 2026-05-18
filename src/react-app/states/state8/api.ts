@@ -101,10 +101,16 @@ export async function fetchMine(): Promise<FeedDrawing[]> {
 	return j.drawings;
 }
 
-export async function likeDrawing(id: number): Promise<{ likes: number }> {
-	const r = await fetch(`${API_BASE}/${id}/like`, { method: "POST" });
+export async function likeDrawing(
+	id: number,
+): Promise<{ likes: number; liked: boolean }> {
+	const r = await fetch(`${API_BASE}/${id}/like`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ owner_secret: getOwnerSecret() }),
+	});
 	if (!r.ok) throw new Error(`like ${r.status}`);
-	return (await r.json()) as { likes: number };
+	return (await r.json()) as { likes: number; liked: boolean };
 }
 
 // ─── Admin (only works when ?admin=<token> matches the Workers secret) ──
