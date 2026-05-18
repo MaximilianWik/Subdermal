@@ -541,10 +541,10 @@ app.post("/api/drawings/:id/like", async (c) => {
 	if (!liker) return c.json({ error: "owner_secret required" }, 400);
 
 	const exists = await c.env.DB.prepare(
-		`SELECT drawing_id FROM drawings WHERE id = ? AND hidden = 0`,
+		`SELECT id FROM drawings WHERE id = ? AND hidden = 0`,
 	)
 		.bind(id)
-		.first<{ drawing_id: number }>();
+		.first<{ id: number }>();
 	if (!exists) return c.json({ error: "not found" }, 404);
 
 	// Try removing first — if the row existed, it's a toggle-off.
