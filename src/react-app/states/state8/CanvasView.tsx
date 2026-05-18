@@ -16,7 +16,7 @@ import {
 	PIXEL_CELL,
 } from "./types";
 import { OccupancyGrid } from "./occupancy";
-import { BLENDER_PREVIEW_PATH, drawStrokes } from "./render";
+import { BLENDER_PREVIEW_PATH, drawStroke, drawStrokes } from "./render";
 import "./CanvasView.css";
 
 // ─────────────────────────────────────────────────────────────
@@ -24,6 +24,12 @@ import "./CanvasView.css";
 //  and drawing input. Imperative API exposed via ref so the
 //  parent can drive it (start/finish stroke, undo, etc.).
 // ─────────────────────────────────────────────────────────────
+
+// Drawings with more than this many strokes are baked into a
+// per-drawing offscreen canvas the first time they render. Smaller
+// drawings render live every frame — they're cheap enough that
+// caching them just wastes memory.
+const STROKE_CACHE_THRESHOLD = 50;
 
 export interface CanvasViewHandle {
 	/** Replace the in-progress draft strokes (e.g. for undo/redo). */
@@ -77,6 +83,38 @@ export default function CanvasView({
 
 	// Occupancy grid is rebuilt whenever `existing` changes
 	const occupancyRef = useRef<OccupancyGrid>(new OccupancyGrid());
+
+	// Per-drawing offscreen bitmap cache. Drawings with more than
+	// STROKE_CACHE_THRESHOLD strokes are rasterised once into their
+	// own bbox-sized canvas the first time they're rendered, then
+	// composited every frame via a single drawImage instead of
+	// re-rasterising hundreds of strokes on every pan/zoom.
+	const drawingCacheRef = useRef<
+		Map<number, { canvas: HTMLCanvasElement; strokesLen: number }>
+	>(new Map());
+
+	const getOrBakeDrawing = (d: FeedDrawing): HTMLCanvasElement | null => {
+		const cache = drawingCacheRef.current;
+		const cached = cache.get(d.id);
+		if (cached && cached.strokesLen === d.strokes.length) {
+			return cached.canvas;
+		}
+		const w = Math.max(1, d.bbox.x2 - d.bbox.x1);
+		const h = Math.max(1, d.bbox.y2 - d.bbox.y1);
+		// Soft cap on per-drawing cache size: if the bbox is enormous
+		// (a giant or long thin scribble) fall back to live render to
+		// avoid eating hundreds of MB of canvas memory.
+		if (w * h > 16_000_000) return null;
+		const off = document.createElement("canvas");
+		off.width = w;
+		off.height = h;
+		const oCtx = off.getContext("2d");
+		if (!oCtx) return null;
+		oCtx.translate(-d.bbox.x1, -d.bbox.y1);
+		for (const s of d.strokes) drawStroke(oCtx, s);
+		cache.set(d.id, { canvas: off, strokesLen: d.strokes.length });
+		return off;
+	};
 
 	// Strokes the user is currently drawing — kept in a ref because we
 	// mutate it during pointer-move at very high frequency (don't re-render
@@ -136,6 +174,17 @@ export default function CanvasView({
 			for (const s of d.strokes) grid.addStroke(s);
 		}
 		occupancyRef.current = grid;
+		// Drop cache entries for drawings that disappeared (admin
+		// hide, edit-in-progress filter, etc.) or whose stroke count
+		// changed (someone edited the piece).
+		const cache = drawingCacheRef.current;
+		const incomingMap = new Map(existing.map((d) => [d.id, d]));
+		for (const id of [...cache.keys()]) {
+			const incoming = incomingMap.get(id);
+			if (!incoming || incoming.strokes.length !== cache.get(id)?.strokesLen) {
+				cache.delete(id);
+			}
+		}
 		scheduleDraw();
 	}, [existing]);
 
@@ -205,10 +254,13 @@ export default function CanvasView({
 		const canvas = canvasElRef.current;
 		const wrap = wrapRef.current;
 		if (!canvas || !wrap) return;
-		const ctx = canvas.getContext("2d", { willReadFrequently: true });
+		const ctx = canvas.getContext("2d");
 		if (!ctx) return;
 		const dpr = window.devicePixelRatio || 1;
 		const v = viewRef.current;
+		const cw = wrap.clientWidth;
+		const ch = wrap.clientHeight;
+
 		// Clear screen-space first
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -227,11 +279,38 @@ export default function CanvasView({
 			dpr * v.y,
 		);
 
-		// Grid background (only inside world bounds)
-		drawGrid(ctx, v);
+		// Visible world rect (frustum) — used to cull both grid lines
+		// and committed drawings that are entirely off-screen.
+		const viewLeft = -v.x / v.zoom;
+		const viewTop = -v.y / v.zoom;
+		const viewRight = (cw - v.x) / v.zoom;
+		const viewBottom = (ch - v.y) / v.zoom;
 
-		// Existing drawings
-		for (const d of existing) drawStrokes(ctx, d.strokes);
+		// Grid background, culled to viewport
+		drawGrid(ctx, v, viewLeft, viewTop, viewRight, viewBottom);
+
+		// Existing drawings — cache heavy ones into per-drawing
+		// offscreen bitmaps so each redraw is one drawImage call
+		// instead of rasterising hundreds of strokes again.
+		for (const d of existing) {
+			const b = d.bbox;
+			if (
+				b.x2 < viewLeft ||
+				b.x1 > viewRight ||
+				b.y2 < viewTop ||
+				b.y1 > viewBottom
+			) {
+				continue;
+			}
+			if (d.strokes.length > STROKE_CACHE_THRESHOLD) {
+				const bake = getOrBakeDrawing(d);
+				if (bake) ctx.drawImage(bake, b.x1, b.y1);
+				else drawStrokes(ctx, d.strokes);
+			} else {
+				drawStrokes(ctx, d.strokes);
+			}
+		}
+
 		// Live (in-progress) strokes on top
 		drawStrokes(ctx, liveStrokesRef.current);
 
@@ -671,7 +750,7 @@ export default function CanvasView({
 	const samplePixelHex = (sx: number, sy: number): string | null => {
 		const canvas = canvasElRef.current;
 		if (!canvas) return null;
-		const ctx = canvas.getContext("2d", { willReadFrequently: true });
+		const ctx = canvas.getContext("2d");
 		if (!ctx) return null;
 		const dpr = window.devicePixelRatio || 1;
 		const px = Math.floor(sx * dpr);
@@ -983,34 +1062,57 @@ export default function CanvasView({
 function drawGrid(
 	ctx: CanvasRenderingContext2D,
 	v: { zoom: number },
+	viewLeft: number,
+	viewTop: number,
+	viewRight: number,
+	viewBottom: number,
 ): void {
-	// Major grid every 256 world px, minor every 32. Hide minor at low zoom.
-	ctx.strokeStyle = "rgba(0,0,0,0.04)";
-	ctx.lineWidth = 1 / v.zoom;
+	// Major grid every 256 world px, minor every 32. Both are culled
+	// to the visible viewport so we never iterate the full world span
+	// at zoom-in (was 1444 line segments per frame regardless of view).
 	const minor = 32;
 	const major = 256;
+
+	// Clamp the iteration range to the world bounds so the grid
+	// doesn't spill into negative space or past WORLD_W/H.
+	const clampL = Math.max(0, viewLeft);
+	const clampR = Math.min(WORLD_W, viewRight);
+	const clampT = Math.max(0, viewTop);
+	const clampB = Math.min(WORLD_H, viewBottom);
+
+	ctx.strokeStyle = "rgba(0,0,0,0.04)";
+	ctx.lineWidth = 1 / v.zoom;
 	if (v.zoom > 0.4) {
 		ctx.beginPath();
-		for (let x = 0; x <= WORLD_W; x += minor) {
-			ctx.moveTo(x, 0);
-			ctx.lineTo(x, WORLD_H);
+		const xStart = Math.floor(clampL / minor) * minor;
+		const xEnd = Math.ceil(clampR / minor) * minor;
+		for (let x = xStart; x <= xEnd; x += minor) {
+			ctx.moveTo(x, clampT);
+			ctx.lineTo(x, clampB);
 		}
-		for (let y = 0; y <= WORLD_H; y += minor) {
-			ctx.moveTo(0, y);
-			ctx.lineTo(WORLD_W, y);
+		const yStart = Math.floor(clampT / minor) * minor;
+		const yEnd = Math.ceil(clampB / minor) * minor;
+		for (let y = yStart; y <= yEnd; y += minor) {
+			ctx.moveTo(clampL, y);
+			ctx.lineTo(clampR, y);
 		}
 		ctx.stroke();
 	}
+
 	ctx.strokeStyle = "rgba(0,0,0,0.09)";
 	ctx.lineWidth = 1 / v.zoom;
 	ctx.beginPath();
-	for (let x = 0; x <= WORLD_W; x += major) {
-		ctx.moveTo(x, 0);
-		ctx.lineTo(x, WORLD_H);
+	const mxStart = Math.floor(clampL / major) * major;
+	const mxEnd = Math.ceil(clampR / major) * major;
+	for (let x = mxStart; x <= mxEnd; x += major) {
+		ctx.moveTo(x, clampT);
+		ctx.lineTo(x, clampB);
 	}
-	for (let y = 0; y <= WORLD_H; y += major) {
-		ctx.moveTo(0, y);
-		ctx.lineTo(WORLD_W, y);
+	const myStart = Math.floor(clampT / major) * major;
+	const myEnd = Math.ceil(clampB / major) * major;
+	for (let y = myStart; y <= myEnd; y += major) {
+		ctx.moveTo(clampL, y);
+		ctx.lineTo(clampR, y);
 	}
 	ctx.stroke();
 }
