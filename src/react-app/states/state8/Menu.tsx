@@ -92,12 +92,6 @@ const CardIcon = () => (
 		<path d="M5.5 16.5c0.6-1.6 2-2.5 3.5-2.5s2.9 0.9 3.5 2.5" />
 	</svg>
 );
-const PersonIcon = () => (
-	<svg {...ICON_PROPS}>
-		<circle cx="12" cy="8" r="3.5" />
-		<path d="M5 20c1-3.5 4-5.5 7-5.5s6 2 7 5.5" />
-	</svg>
-);
 const SparkIcon = () => (
 	<svg {...ICON_PROPS}>
 		<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" />
@@ -147,7 +141,6 @@ const EXTERNAL_ITEMS: MenuItem[] = [
 const VIEW_ITEMS: MenuItem[] = [
 	{ label: "Girlfriend", view: 2, icon: <HeartIcon /> },
 	{ label: "Contact card", view: 6, icon: <CardIcon /> },
-	{ label: "Jonte", view: 5, icon: <PersonIcon /> },
 	{ label: "GlepGlorp", view: 1, icon: <SparkIcon /> },
 ];
 
