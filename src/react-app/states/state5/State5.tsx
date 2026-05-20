@@ -1,4 +1,4 @@
-import RomanticPoster from "./RomanticPoster";
+import RomanticPoster from "../shared/RomanticPoster";
 
 export default function State5() {
 	return (

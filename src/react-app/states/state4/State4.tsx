@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { REDIRECT_URL } from "../../../state";
+import { REDIRECT_URL } from "../../../../state";
 import "./State4.css";
 
 export default function State4() {

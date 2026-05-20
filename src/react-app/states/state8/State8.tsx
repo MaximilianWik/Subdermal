@@ -1,29 +1,29 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./State8.css";
-import type { CanvasViewHandle } from "./state8/CanvasView";
-import CanvasView from "./state8/CanvasView";
-import Toolbar from "./state8/Toolbar";
-import SignModal from "./state8/SignModal";
-import Detail from "./state8/Detail";
-import BanList from "./state8/BanList";
-import MyDrawings from "./state8/MyDrawings";
-import Menu from "./state8/Menu";
-import Rules from "./state8/Rules";
+import type { CanvasViewHandle } from "./CanvasView";
+import CanvasView from "./CanvasView";
+import Toolbar from "./Toolbar";
+import SignModal from "./SignModal";
+import Detail from "./Detail";
+import BanList from "./BanList";
+import MyDrawings from "./MyDrawings";
+import Menu from "./Menu";
+import Rules from "./Rules";
 import {
 	fetchFeed,
 	fetchOne,
 	isAdminMode,
 	submitDrawing,
 	updateDrawing,
-} from "./state8/api";
-import { rememberMyDrawing } from "./state8/owner";
-import { clearDraft, loadDraft, saveDraft, type Draft } from "./state8/draft";
+} from "./api";
+import { rememberMyDrawing } from "./owner";
+import { clearDraft, loadDraft, saveDraft, type Draft } from "./draft";
 import type {
 	FeedDrawing,
 	FullDrawing,
 	Stroke,
 	ToolType,
-} from "./state8/types";
+} from "./types";
 import {
 	BRUSH_SIZE_MAX,
 	BRUSH_SIZE_MIN,
@@ -31,7 +31,7 @@ import {
 	ERASER_SIZE_MIN,
 	WORLD_H,
 	WORLD_W,
-} from "./state8/types";
+} from "./types";
 
 // ─────────────────────────────────────────────────────────────
 //  State 8 — Collaborative canvas.

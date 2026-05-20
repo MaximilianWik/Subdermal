@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { STATE } from "../../state";
 import { states, type StateKey } from "./states";
-import State7 from "./states/State7";
+import State7 from "./states/state7/State7";
 import "./App.css";
 
 // Hash-based override lets the canvas's menu navigate temporarily to

@@ -1,11 +1,11 @@
-import State1 from "./State1";
-import State2 from "./State2";
-import State3 from "./State3";
-import State4 from "./State4";
-import State5 from "./State5";
-import State6 from "./State6";
-import State7 from "./State7";
-import State8 from "./State8";
+import State1 from "./state1/State1";
+import State2 from "./state2/State2";
+import State3 from "./state3/State3";
+import State4 from "./state4/State4";
+import State5 from "./state5/State5";
+import State6 from "./state6/State6";
+import State7 from "./state7/State7";
+import State8 from "./state8/State8";
 
 // Registry of all available page states.
 //
