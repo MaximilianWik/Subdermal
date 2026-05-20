@@ -141,7 +141,7 @@ const EXTERNAL_ITEMS: MenuItem[] = [
 const VIEW_ITEMS: MenuItem[] = [
 	{ label: "Girlfriend", view: 2, icon: <HeartIcon /> },
 	{ label: "Contact card", view: 6, icon: <CardIcon /> },
-	{ label: "GlepGlorp", view: 1, icon: <SparkIcon /> },
+	{ label: "GlerpGlorp", view: 1, icon: <SparkIcon /> },
 ];
 
 const ExternalArrow = () => (
