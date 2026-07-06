@@ -1,10 +1,10 @@
-# Subdermal — QR Code Domain
+# Subdermal - QR Code Domain
 
 **LIVE:** https://max-wik.com/
 
 A React single-page application deployed as a Cloudflare Worker, with a Hono-powered API backend running at the edge.
 
-The page is reached via QR code (tattooed on a real arm) and is designed for **fast state switching** — change a single number in `state.ts` and Cloudflare auto-deploys a new look. Editable directly from the GitHub mobile app.
+The page is reached via QR code (tattooed on a real arm) and is designed for **fast state switching**  change a single number in `state.ts` and Cloudflare auto-deploys a new look. Editable directly from the GitHub mobile app.
 
 ## Stack
 
@@ -27,21 +27,21 @@ export const STATE: StateKey = 8;  // ← change this
 | Value | What is shown                                                                                     |
 | ----- | ------------------------------------------------------------------------------------------------- |
 | `1`   | `glorpglorp.gif`                                                                                  |
-| `2`   | `Jessi.jpg` (with romantic header)                                                                |
+| `2`   | `Jessi.jpg` ()                                                                |
 | `3`   | `cleo.png`                                                                                        |
 | `4`   | Redirects the page to `REDIRECT_URL` (also set in `state.ts`)                                     |
 | `5`   | `jonte.jpg` (with romantic header)                                                                |
-| `6`   | vCard "Save to Contacts" page — downloads a `.vcf`. Edit fields at the top of `State6.tsx`.       |
-| `7`   | `rm -rf /` chaos cinematic — terminal cascade, glitch flashes, and a "...just kidding." reveal.   |
+| `6`   | vCard "Save to Contacts" page - downloads a `.vcf`. Edit fields at the top of `State6.tsx`.       |
+| `7`   | `rm -rf /` chaos cinematic - terminal cascade, glitch flashes                                     |
 | `8`   | **Subdermal** — the collaborative canvas. See below.                                              |
 
 Commit the change. Cloudflare picks it up and redeploys within ~1 minute.
 
 > **Type safety:** `STATE` is typed against the registry, so an invalid number fails the build and Cloudflare won't deploy broken code — the live page is never silently broken.
 
-## State 8 — Subdermal (collaborative canvas)
+## State 8 - Subdermal (collaborative canvas)
 
-A 16384 × 24576 world canvas where any visitor can draw a piece next to everyone else's. Drawings are stored in D1 and served back as a feed; the canvas renders to a viewport-sized HTMLCanvas with a pan/zoom transform applied — it never instantiates an actual giant canvas element.
+A 16384 × 24576 world canvas where any visitor can draw a piece next to everyone else's. Drawings are stored in D1 and served back as a feed; the canvas renders to a viewport-sized HTMLCanvas with a pan/zoom transform applied, it never instantiates an actual giant canvas element.
 
 **Tools available in the palette**
 
