@@ -38,6 +38,13 @@ export interface CanvasViewHandle {
 	resetView: () => void;
 	/** Zoom to a level centered on the viewport. */
 	setZoom: (z: number) => void;
+	/**
+	 * If the current zoom is below the draw-mode floor (the zoom computed
+	 * by the initial centerView), zoom up to the floor while keeping the
+	 * current viewport centre anchored in world space. No-op if already
+	 * at or above the floor.
+	 */
+	snapToDrawFloor: () => void;
 }
 
 interface Props {
@@ -80,6 +87,10 @@ export default function CanvasView({
 	//   sx = wx * zoom + view.x
 	//   sy = wy * zoom + view.y
 	const viewRef = useRef({ x: 0, y: 0, zoom: 1 });
+
+	// The zoom level produced by centerView() — used as the draw-mode
+	// zoom floor so users can't draw while zoomed out past their spawn point.
+	const drawZoomFloorRef = useRef(1);
 
 	// Occupancy grid is rebuilt whenever `existing` changes
 	const occupancyRef = useRef<OccupancyGrid>(new OccupancyGrid());
@@ -165,6 +176,21 @@ export default function CanvasView({
 			v.y = ch / 2 - wy * v.zoom;
 			scheduleDraw();
 		},
+		snapToDrawFloor: () => {
+			const v = viewRef.current;
+			const floor = drawZoomFloorRef.current;
+			if (v.zoom >= floor) return; // already at or above floor — no-op
+			const cw = wrapRef.current?.clientWidth ?? INITIAL_VIEW_W;
+			const ch = wrapRef.current?.clientHeight ?? INITIAL_VIEW_H;
+			// Zoom up to floor anchored on viewport centre so the user
+			// stays looking at the same world location.
+			const wx = (cw / 2 - v.x) / v.zoom;
+			const wy = (ch / 2 - v.y) / v.zoom;
+			v.zoom = floor;
+			v.x = cw / 2 - wx * floor;
+			v.y = ch / 2 - wy * floor;
+			scheduleDraw();
+		},
 	}));
 
 	// ─── Rebuild occupancy when `existing` changes ──────────
@@ -202,6 +228,7 @@ export default function CanvasView({
 		const ch = wrap.clientHeight;
 		// Show the initial viewport area centered, at zoom that fits it
 		const zoom = Math.min(cw / INITIAL_VIEW_W, ch / INITIAL_VIEW_H);
+		drawZoomFloorRef.current = zoom;
 		viewRef.current = {
 			zoom,
 			x: cw / 2 - (WORLD_W / 2) * zoom,
@@ -484,8 +511,9 @@ export default function CanvasView({
 			const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
 			const g = gestureRef.current;
 			const zoomFactor = dist / Math.max(1, g.startDist);
+			const zoomFloor = mode === "draw" ? drawZoomFloorRef.current : ZOOM_MIN;
 			const newZoom = Math.max(
-				ZOOM_MIN,
+				zoomFloor,
 				Math.min(ZOOM_MAX, g.startView.zoom * zoomFactor),
 			);
 			// Anchor zoom on the gesture center (in world coords)
@@ -969,8 +997,9 @@ export default function CanvasView({
 		const sy = e.clientY - r.top;
 		const v = viewRef.current;
 		const factor = Math.exp(-e.deltaY * 0.0015);
+		const zoomFloor = mode === "draw" ? drawZoomFloorRef.current : ZOOM_MIN;
 		const newZoom = Math.max(
-			ZOOM_MIN,
+			zoomFloor,
 			Math.min(ZOOM_MAX, v.zoom * factor),
 		);
 		const wx = (sx - v.x) / v.zoom;

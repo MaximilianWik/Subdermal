@@ -254,6 +254,10 @@ export default function State8() {
 
 	// ─── Mode toggle ────────────────────────────────────────
 	const enterDraw = () => {
+		// Snap zoom up to the draw-mode floor if the user is zoomed out too
+		// far — but keep their pan position so they stay looking at the same
+		// spot they scouted for empty space.
+		canvasHandleRef.current?.snapToDrawFloor();
 		setMode("draw");
 		if (drawStartedAtRef.current === 0) drawStartedAtRef.current = Date.now();
 	};
@@ -370,6 +374,7 @@ export default function State8() {
 		drawStartedAtRef.current = Date.now();
 		setDetail(null);
 		setMineOpen(false);
+		canvasHandleRef.current?.snapToDrawFloor();
 		setMode("draw");
 	};
 

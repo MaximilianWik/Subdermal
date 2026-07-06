@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Draw-mode zoom floor.** When entering draw mode (or edit mode via "Mine"), the canvas snaps zoom up to the "spawn-point" level — the zoom computed by the initial `centerView()` call, which fits the intended starting viewport on screen. If the user is already zoomed in, nothing happens. Pan position is always preserved so scouting for empty space before drawing still works. While in draw mode, wheel zoom and pinch-zoom are clamped at this same floor, preventing drawing at extreme zoom-out levels that produced canvas-covering strokes. Exiting draw mode restores full `ZOOM_MIN` freedom.
+
+### Added
+
 - **Intro cinematic on every fresh load.** State 7's `rm -rf /` glitch sequence plays as an intro before the configured `STATE`, then auto-advances. Skipped when deep-linking via `#view=N` or when `STATE === 7` itself. Once dismissed (or once any menu navigation occurs) it never replays inside the same SPA session.
 - **House-rules popup** on every entry to the canvas — four cards (no hate speech, profanity & NSFW allowed, no griefing, no spam/impersonation) and a consequences strip (artwork removal, IP+device ban, "doxxed (joking… mostly)").
 - **Side menu** with a hamburger button in the canvas topbar, linking out to the artist's portfolio, the Tessera QR generator, the Cursed Echoes minigame, Instagram, plus internal `#view=N` shortcuts to states 1, 2, 5, and 6. A "Back to canvas" pill is rendered at the App level whenever a non-canonical view is showing.
