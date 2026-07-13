@@ -154,6 +154,9 @@ export default function CanvasView({
 		moved: boolean;
 	} | null>(null);
 
+	// Right-click drag pan in draw mode (desktop only — button === 2)
+	const rightPanRef = useRef<{ lastX: number; lastY: number } | null>(null);
+
 	// ─── Imperative API ─────────────────────────────────────
 	useImperativeHandle(canvasRef, () => ({
 		setDraft: (strokes: Stroke[]) => {
@@ -409,6 +412,13 @@ export default function CanvasView({
 			moved: false,
 		};
 
+		// Right-click in draw mode → pan only, no stroke
+		if (e.button === 2 && mode === "draw") {
+			rightPanRef.current = { lastX: sx, lastY: sy };
+			wrapRef.current?.classList.add("cv--panning");
+			return;
+		}
+
 		if (mode === "draw") {
 			const { x: wx, y: wy } = screenToWorld(sx, sy);
 			if (tool === "eraser") {
@@ -528,6 +538,18 @@ export default function CanvasView({
 			return;
 		}
 
+		// Right-click pan (draw mode, desktop)
+		if (rightPanRef.current) {
+			const dx = sx - rightPanRef.current.lastX;
+			const dy = sy - rightPanRef.current.lastY;
+			rightPanRef.current.lastX = sx;
+			rightPanRef.current.lastY = sy;
+			viewRef.current.x += dx;
+			viewRef.current.y += dy;
+			scheduleDraw();
+			return;
+		}
+
 		// Single finger
 		if (mode === "draw") {
 			const { x: wx, y: wy } = screenToWorld(sx, sy);
@@ -631,6 +653,14 @@ export default function CanvasView({
 	const handlePointerUp = (e: React.PointerEvent) => {
 		pointersRef.current.delete(e.pointerId);
 		if (pointersRef.current.size < 2) gestureRef.current = null;
+
+		// End right-click pan
+		if (e.button === 2) {
+			rightPanRef.current = null;
+			tapRef.current = null;
+			wrapRef.current?.classList.remove("cv--panning");
+			return;
+		}
 
 		const tap = tapRef.current;
 		tapRef.current = null;
@@ -1017,6 +1047,7 @@ export default function CanvasView({
 				mode === "draw" && tool === "eraser" ? "cv--erasing" : ""
 			}`}
 			onPointerDown={handlePointerDown}
+			onContextMenu={(e) => { if (mode === "draw") e.preventDefault(); }}
 			onPointerMove={(e) => {
 				handlePointerMove(e);
 				const wrap = wrapRef.current;
@@ -1043,6 +1074,8 @@ export default function CanvasView({
 			onPointerUp={handlePointerUp}
 			onPointerCancel={handlePointerUp}
 			onPointerLeave={() => {
+				rightPanRef.current = null;
+				wrapRef.current?.classList.remove("cv--panning");
 				updateEraserCursor(0, 0, false);
 				const dEl = dropperCursorRef.current;
 				if (dEl) dEl.style.display = "none";

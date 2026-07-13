@@ -22,6 +22,9 @@
 .cv--erasing {
 	cursor: none;
 }
+.cv--panning {
+	cursor: grabbing !important;
+}
 
 .cv__eraserCursor {
 	position: absolute;
