@@ -58,6 +58,9 @@ type Mode = "view" | "draw";
 
 const MAX_HISTORY = 50;
 
+// Flip to true to restore the burger menu button in the top-left corner
+const SHOW_NAVBAR = false;
+
 export default function State8() {
 	const [mode, setMode] = useState<Mode>("view");
 	const [existing, setExisting] = useState<FeedDrawing[]>([]);
@@ -432,27 +435,30 @@ export default function State8() {
 			{/* Top-bar info / mode toggle */}
 			<div className="s8__topbar">
 				<div className="s8__topbarLeft">
-					<button
-						className="s8__menuFab"
-						onClick={() => setMenuOpen(true)}
-						aria-label="Open menu"
-					>
-						<svg
-							width="18"
-							height="18"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							aria-hidden="true"
+					{/* Burger menu hidden temporarily — flip SHOW_NAVBAR to true to restore */}
+					{SHOW_NAVBAR && (
+						<button
+							className="s8__menuFab"
+							onClick={() => setMenuOpen(true)}
+							aria-label="Open menu"
 						>
-							<line x1="4" y1="7" x2="20" y2="7" />
-							<line x1="4" y1="12" x2="20" y2="12" />
-							<line x1="4" y1="17" x2="20" y2="17" />
-						</svg>
-					</button>
+							<svg
+								width="18"
+								height="18"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								aria-hidden="true"
+							>
+								<line x1="4" y1="7" x2="20" y2="7" />
+								<line x1="4" y1="12" x2="20" y2="12" />
+								<line x1="4" y1="17" x2="20" y2="17" />
+							</svg>
+						</button>
+					)}
 					<div className="s8__brand">
 						<div className="s8__brandTitle">Subdermal</div>
 						<div className="s8__brandSub">
