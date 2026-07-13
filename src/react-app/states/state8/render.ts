@@ -392,29 +392,18 @@ function hexWithAlpha(hex: string, alpha: number): string {
 // ─── 10. Pixel — fills exactly one minor-grid cell per point ──
 //
 // Each point in the stroke is the TOP-LEFT corner of a snapped
-// PIXEL_CELL×PIXEL_CELL square, in world coords. No anti-aliasing,
-// no overlap between adjacent cells (origins are 32-px aligned).
+// PIXEL_CELL×PIXEL_CELL square, in world coords.
 //
-// Two-pass draw: first an opaque white fill covers the cell completely
-// (hiding grid lines regardless of opacity or sub-pixel edge precision),
-// then the actual colour is painted on top at the desired opacity. This
-// ensures the grid never bleeds through, even at low opacity or when
-// canvas anti-aliasing nudges the fill edge back from the cell boundary.
+// NOTE: CanvasView's drawAllRef applies a second device-space pass on
+// top of this using Math.floor/ceil to eliminate sub-pixel grid bleed.
+// This world-transform pass still runs so the baked offscreen caches
+// (drawingCacheRef) are populated correctly.
 function renderPixel(
 	ctx: CanvasRenderingContext2D,
 	s: Stroke,
 	limit: number,
 ): void {
 	ctx.globalCompositeOperation = "source-over";
-
-	// Pass 1 — opaque white base: fully erases grid lines beneath each cell.
-	ctx.globalAlpha = 1;
-	ctx.fillStyle = "#ffffff";
-	for (let i = 0; i < limit; i += 2) {
-		ctx.fillRect(s.points[i], s.points[i + 1], PIXEL_CELL, PIXEL_CELL);
-	}
-
-	// Pass 2 — actual colour at the stroke's opacity.
 	ctx.globalAlpha = s.opacity;
 	ctx.fillStyle = s.color;
 	for (let i = 0; i < limit; i += 2) {

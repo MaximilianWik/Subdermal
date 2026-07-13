@@ -348,6 +348,30 @@ export default function CanvasView({
 		ctx.lineWidth = 2 / v.zoom;
 		ctx.strokeStyle = "rgba(0,0,0,0.18)";
 		ctx.strokeRect(0, 0, WORLD_W, WORLD_H);
+
+		// ─── Pixel-snapped pass ──────────────────────────────────
+		// Re-render every pixel-tool cell in device space using
+		// Math.floor for position and Math.ceil for size so each fill
+		// snaps to exact integer device pixels.  This eliminates the
+		// sub-pixel anti-aliased gap that appears between the fill edge
+		// and the grid-line center when v.x / v.y are non-integer.
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
+		ctx.globalCompositeOperation = "source-over";
+		const cellDev = Math.ceil(PIXEL_CELL * v.zoom * dpr);
+		const renderPixelSnapped = (s: Stroke) => {
+			if (s.tool !== "pixel" || s.points.length < 2) return;
+			ctx.globalAlpha = s.opacity;
+			ctx.fillStyle = s.color;
+			for (let i = 0; i + 1 < s.points.length; i += 2) {
+				const dx = Math.floor((s.points[i] * v.zoom + v.x) * dpr);
+				const dy = Math.floor((s.points[i + 1] * v.zoom + v.y) * dpr);
+				ctx.fillRect(dx, dy, cellDev, cellDev);
+			}
+		};
+		for (const d of existing) {
+			for (const s of d.strokes) renderPixelSnapped(s);
+		}
+		for (const s of liveStrokesRef.current) renderPixelSnapped(s);
 	};
 
 	// Schedule redraw whenever inputs that affect static rendering change
